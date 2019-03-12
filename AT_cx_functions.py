@@ -401,9 +401,9 @@ def getCurrentWD():
 class Chessboard:
     def __init__(self):
         #chessboard dimensions
-        self.cbrow = 7
-        self.cbcol = 9
-        self.sqrsize = 20 #mm
+        self.cbrow = 6
+        self.cbcol = 10
+        self.sqrsize = 30 #mm
         #termination criteria
         self.criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, self.sqrsize, 0.001)
         self.objp = np.zeros((self.cbrow*self.cbcol,3),np.float32)
@@ -442,3 +442,38 @@ def pixCoordify(laser,width):
     liste = list(range(width))
     liste = np.vstack((liste,laser)).T
     return liste
+
+def loadCaliParam():
+    """
+    This functions loads the camera calibration parameters
+    obtained from Matlab into numpy arrays
+    """
+    #path to the folder where the parameters are saved
+    caliParam_folder = "C:/Users/trymdh.WIN-NTNU-NO/OneDrive/Master/Matlab"
+    os.chdir(caliParam_folder)
+    
+    #Mean Reprojection Error
+    ret = np.loadtxt('MeanReprojectionError.txt')
+   
+    #The Intrisinc Matrix
+    mtx = np.loadtxt('IntrinsicMatrix.txt')
+    
+    #Rotation Matrices and translation vectors between the scene and the camera
+    tvecs = np.loadtxt('TranslationVectors.txt')
+    rMats = np.loadtxt('RotationMatrices.txt') # Note: this file contains all the scene/camera rotationmatrices for each picture. It needs to be reshaped from (#,3) into (#/3,3,3)
+    shp = rMats.shape
+    C = int(shp[0]/3)
+    rMats = rMats.reshape(C,3,3)
+    
+    #Radial and tangential distortion coeffecients, dist = [k_1,k_2,p_1,p_2[,k_3[,k_4,k_5,k_6]]]
+    dist = []
+    rDist = np.loadtxt('RadialDistortion.txt') #k_1 and k_2, => k_3 = 0, this leads to dist = [k_1,k_2,p_1,p_2]
+    tDist = np.loadtxt('TangentialDistortion.txt') #p_1 and p_2
+    dist.append(rDist)
+    dist.append(tDist)
+    dist = np.asarray(dist).reshape(1,4)
+
+    return ret,mtx,tvecs,rMats,dist
+
+
+
