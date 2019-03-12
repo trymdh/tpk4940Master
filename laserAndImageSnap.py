@@ -45,7 +45,6 @@ else:
 
 #Snap an image in image mode and save it
 
-
 if cam.cx_getParam(hDev,"CameraMode")[1] != "Image":
     imageConfig(hDev)
     time.sleep(5)
