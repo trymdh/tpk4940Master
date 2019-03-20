@@ -449,10 +449,9 @@ def loadCaliParam():
     obtained from Matlab into numpy arrays
     """
     #path to the folder where the parameters are saved
-    
-    #caliParam_folder = "C:/Users/trymdh.WIN-NTNU-NO/OneDrive/Master/Matlab" #work pc
-    caliParam_folder = "C:/Users/Trym/OneDrive/Master/Matlab" # home pc
-    #caliParam_folder = "C:/Users/TrymAsus/OneDrive/Master/Matlab" #LAPTOP
+    #caliParam_folder = "C:/Users/trymdh.WIN-NTNU-NO/OneDrive/tpk4940Master/Matlab" #work pc
+    caliParam_folder = "C:/Users/Trym/OneDrive/tpk4940Master/Matlab" # home pc
+    #caliParam_folder = "C:/Users/TrymAsus/OneDrive/tpk4940Master/Matlab" #LAPTOP
 
     os.chdir(caliParam_folder)
     

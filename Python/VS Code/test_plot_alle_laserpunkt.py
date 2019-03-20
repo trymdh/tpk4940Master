@@ -8,9 +8,9 @@ from AT_cx_functions import*
 #load all the calibration parameters
 ret,K,tvecs,rMats,dist = loadCaliParam()
 K_inv = np.linalg.inv(K)
-#os.chdir('C:/Users/Trym/OneDrive/Master/VS Code/laserimage') #home pc
-os.chdir('C:/Users/trymdh.WIN-NTNU-NO/OneDrive/Master/VS Code/laserimage') #work pc
-#os.chdir('C:/Users/TrymAsus/OneDrive/Master/VS Code/laserimage')#LAPTOP
+os.chdir('C:/Users/Trym/OneDrive/tpk4940Master/Python/VS Code/laserimage') #home pc
+#os.chdir('C:/Users/trymdh.WIN-NTNU-NO/OneDrive/tpk4940Master/Python/VS Code/laserimage') #work pc
+#os.chdir('C:/Users/TrymAsus//OneDrive/tpk4940Master/Python/VS Code/laserimage')#LAPTOP
 
 laser_npy = os.getcwd().replace("\\","/") + "/*.npy"
 laser_npy = glob.glob(laser_npy)
@@ -124,8 +124,7 @@ residual = np.linalg.norm(errors)
 print ("LS solution:")
 print ("%f x + %f y + %f = z" % (x_fit[0], x_fit[1], x_fit[2]))
 print ("residual:")
-print(e)
-print (residual)
+print(residual)
 
 
 #RANSAC

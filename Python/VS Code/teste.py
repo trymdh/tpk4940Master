@@ -107,7 +107,7 @@ while ite < k:
 
     if cnt_outliers < best_outlier:
         best_outlier = cnt_outliers
-        best_fit[0],best_fit[1],best_fit[2],best_fit[3] = pI
+        best_fit[0],best_fit[1],best_fit[2],best_fit[3] = pI/pI[2]
 
         print("Iteration Number {0}".format(ite))
         print("Number of outliers is {0}".format(best_outlier))
