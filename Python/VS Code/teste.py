@@ -4,6 +4,7 @@ from mpl_toolkits.mplot3d import Axes3D
 import os
 import glob
 from AT_cx_functions import*
+import random
 
 #load all the calibration parameters
 ret,K,tvecs,rMats,dist = loadCaliParam()
@@ -40,83 +41,81 @@ for i in range(1,len(laser_npy) + 1):
             fullcoord = np.array([norm_img_coord * d]) + l_0
             ext_points = np.append(ext_points,fullcoord)
     j = j + 1
-print(ext_points.shape)
+
 ext_points = np.reshape(ext_points,(-1,3))
 ext_points = ext_points[2048:]
-ext_points = ext_points[::50]
+ext_points = ext_points[::100]
 
 #RANSAC---------------------------------------------------------------
-ite = 0
-k = 100
-best_outlier = len(ext_points) #first assume high number of outliers, i.e all points are outliers
-best_fit = np.zeros(4)
-while ite < k:
+def estimatePlane(pointData,len_data):
     P_rand = []
-    saved_index = []
-    #If the random generated index is not unique in the saved_index list, a new generated index should be used
-    for n in range(3):
-        rand_index = np.random.randint(0, len(ext_points) - 1)
-        if rand_index not in saved_index:
-            saved_index.append(rand_index)
-        else:
-            saved_index.append(rand_index + 1)
-    for i in saved_index:
-        P_rand.append(ext_points[i])
+    rand_index = random.sample(len_data,3)
+    for i in rand_index:
+        P_rand.append(pointData[i])
     P_rand = np.asarray(P_rand)
 
     p_1 = P_rand[0]
     p_2 = P_rand[1]
     p_3 = P_rand[2]
 
+    #compute two vectors in the plane
     v1 = p_1 - p_3
     v2 = p_2 - p_3
 
     #The plane normal , n = [a,b,c]
     n = np.cross(v1,v2)
+    
+    #Plane, pI = [n,d] = [a,b,c,d]
     a,b,c = n
     d = -np.dot(p_3,np.cross(p_1,p_2))
-
-    #print("The plane equation is {0}x + {1}y + {2}z = {3}".format(a,b,c,d))
-    #print("The plane is at a distance {0} from the origin".format((d/np.linalg.norm(n))))
-
-    #The plane Pi is defined by n and its distance to the origin, d/|n|
-    # Pi = [n,d] = [a,b,c,d]
     pI = np.array([a,b,c,d])
-
+    
     #p_h = [x,y,z,1]
     p_1_h = np.append(p_1,1)
     p_2_h = np.append(p_2,1)
     p_3_h = np.append(p_3,1)
 
-    #Criteria for a point to be in the plane is that the equation x . Pi = 0 is satisfied.
-    #print(np.dot(p_1_h,pI))
-    #print(np.dot(p_2_h,pI))
-    #print(np.dot(p_3_h,pI))
-
-    thresh_dist = np.dot(p_1_h,pI)
-    cnt_outliers = 0
-    cnt_inliers = 0
+    #Criteria for a point to be in the plane is that the equation x_h . Pi = 0 is satisfied.
+    c1 = np.dot(p_1_h,pI)
+    c2 = np.dot(p_2_h,pI)
+    c3 = np.dot(p_3_h,pI)
     
-    for point in ext_points:
-        point = np.append(point,1)
-        error = np.dot(point,pI)
-        if error < thresh_dist:
-            cnt_outliers = cnt_outliers + 1
-        elif error > thresh_dist:
-            cnt_inliers = cnt_inliers + 1
+    conditions = [np.around(c1,decimals=6) == 0,
+    np.around(c3,decimals=6) == 0,
+    np.around(c3,decimals=6) == 0]
 
-    if cnt_outliers < best_outlier:
-        best_outlier = cnt_outliers
-        best_fit[0],best_fit[1],best_fit[2],best_fit[3] = pI/pI[2]
+    if all(conditions):
+        return pI, c1
+    else:
+        return None
 
-        print("Iteration Number {0}".format(ite))
-        print("Number of outliers is {0}".format(best_outlier))
-        print("The plane equation is {0}x + {1}y + {2}z = {3}".format(best_fit[0],best_fit[1],best_fit[2],best_fit[3]))
-        
-    ite = ite + 1
+def ransacPlane(pointData,goal_inliers,k_max,stop_at_goal = True):
+    len_data = list(range(0,len(pointData)))
+    best_fit = np.zeros(4)
+    best_inlier = 0
+    cnt_inliers = 0
+    k = 0
+    while best_inlier < goal_inliers:
+        pI,thresh_inlier = estimatePlane(pointData,len_data)   
+        for point in pointData:
+            point = np.append(point,1)
+            error = np.dot(point,pI)
+            if error < thresh_inlier:
+                cnt_inliers = cnt_inliers + 1
+
+        if cnt_inliers > goal_inliers and stop_at_goal:
+            best_inlier = cnt_inliers
+            best_fit[0], best_fit[1], best_fit[2], best_fit[3] = pI/pI[2]
+
+            print("Iteration Number {0}".format(k))
+            print("Number of inliers is {0}".format(best_inlier))
+            print("The plane equation is {0}x + {1}y + {2}z = {3}".format(best_fit[0],best_fit[1],best_fit[2],best_fit[3]))
+        k = k + 1
+    return best_fit
+
+best_fit = ransacPlane(ext_points,1000,100)
 
 a,b,c,d = best_fit
-
 #plot raw data
 x = ext_points[:,0]
 y = ext_points[:,1]
@@ -130,10 +129,10 @@ ax.scatter(x, y, z, color ='b')
 xlim = ax.get_xlim()
 ylim = ax.get_ylim()
 X,Y = np.meshgrid(np.arange(xlim[0], xlim[1]),
-                  np.arange(ylim[0], ylim[1]))
+                    np.arange(ylim[0], ylim[1]))
 
 Z = (- a * X - b * Y - d)/ c
-                  
+
 ax.plot_wireframe(X,Y,Z,alpha = 0.5, color = 'r')
 
 ax.set_zlim(1200,0)
