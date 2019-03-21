@@ -6,6 +6,7 @@ import matplotlib.animation as animation
 import cv2
 import os
 import time
+import random
 
 #CAMERA FUNCTIONS
 #-----------------------------------------------------------------------------------------------------------------------------------
@@ -503,6 +504,72 @@ def drawFrame(R,t):
     plt.show()
 
     return 0
+
+def estimatePlane(pointData,len_data):
+    P_rand = []
+    rand_index = random.sample(len_data,3)
+    for i in rand_index:
+        P_rand.append(pointData[i])
+    P_rand = np.asarray(P_rand)
+
+    p_1 = P_rand[0]
+    p_2 = P_rand[1]
+    p_3 = P_rand[2]
+
+    #compute two vectors in the plane
+    v1 = p_1 - p_3
+    v2 = p_2 - p_3
+
+    #The plane normal , n = [a,b,c]
+    n = np.cross(v1,v2)
+    
+    #Plane, pI = [n,d] = [a,b,c,d]
+    a,b,c = n
+    d = -np.dot(p_3,np.cross(p_1,p_2))
+    pI = np.array([a,b,c,d])
+    
+    #p_h = [x,y,z,1]
+    p_1_h = np.append(p_1,1)
+    p_2_h = np.append(p_2,1)
+    p_3_h = np.append(p_3,1)
+
+    #Criteria for a point to be in the plane is that the equation x_h . Pi = 0 is satisfied.
+    c1 = np.dot(p_1_h,pI)
+    c2 = np.dot(p_2_h,pI)
+    c3 = np.dot(p_3_h,pI)
+    
+    conditions = [np.around(c1,decimals=6) == 0,
+    np.around(c3,decimals=6) == 0,
+    np.around(c3,decimals=6) == 0]
+
+    if all(conditions):
+        return pI, c1
+    else:
+        return None
+
+def ransacPlane(pointData,goal_inliers,k_max,stop_at_goal = True):
+    len_data = list(range(0,len(pointData)))
+    best_fit = np.zeros(4)
+    best_inlier = 0
+    cnt_inliers = 0
+    k = 0
+    while best_inlier < goal_inliers:
+        pI,thresh_inlier = estimatePlane(pointData,len_data)   
+        for point in pointData:
+            point = np.append(point,1)
+            error = np.dot(point,pI)
+            if error < thresh_inlier:
+                cnt_inliers = cnt_inliers + 1
+
+        if cnt_inliers > goal_inliers and stop_at_goal:
+            best_inlier = cnt_inliers
+            best_fit[0], best_fit[1], best_fit[2], best_fit[3] = pI/pI[2]
+
+            print("Iteration Number {0}".format(k))
+            print("Number of inliers is {0}".format(best_inlier))
+            print("The plane equation is {0}x + {1}y + {2}z = {3}".format(best_fit[0],best_fit[1],best_fit[2],best_fit[3]))
+        k = k + 1
+    return best_fit
 
 
 #Matrix functions
