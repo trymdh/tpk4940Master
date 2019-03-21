@@ -505,70 +505,113 @@ def drawFrame(R,t):
 
     return 0
 
-def estimatePlane(pointData,len_data):
+def getCentroid3D(xs,ys,zs):
+    #this function takes in all the points seperated into their x,y and z coordinates, 
+    # nd returns the centroid of all the points.
+    C = []
+    x_av = np.average(xs)
+    y_av = np.average(ys)
+    z_av = np.average(zs)
+    C.append(x_av)
+    C.append(y_av)
+    C.append(z_av)
+    return C
+
+def getPlaneData(pI,ax):
+    #This function takes the plane parameters and the matplotlib plot object as input 
+    #and returns the data values needed to plot a wireframe using plt.subplot.plot_wireframe()
+    xlim = ax.get_xlim()
+    ylim = ax.get_ylim()
+    X,Y = np.meshgrid(np.arange(xlim[0], xlim[1]),
+                    np.arange(ylim[0], ylim[1]))
+    Z = np.zeros(X.shape)
+
+    for r in range(X.shape[0]):
+        for c in range(X.shape[1]):
+            #Z = (- a * X - b * Y - d)/ c
+            Z[r,c] = ((-pI[0] * X[r,c] - pI[1] * Y[r,c] - pI[3])/pI[2])
+    return X,Y,Z
+
+def randomSample(data,samplesize):
     P_rand = []
-    rand_index = random.sample(len_data,3)
+    #generate a list of random selected indexes within min/max index range of the point data.
+    rand_index = random.sample(list(range(0,len(data))),samplesize)
     for i in rand_index:
-        P_rand.append(pointData[i])
+        P_rand.append(data[i])
     P_rand = np.asarray(P_rand)
 
+    return P_rand
+
+def estimatePlane(P_rand):
+    #This function estimates a plane from three random points taken from a dataset and return the plane parameters
+    #if the condition for point to be in the plane is satisfied.
     p_1 = P_rand[0]
     p_2 = P_rand[1]
     p_3 = P_rand[2]
-
+    
     #compute two vectors in the plane
     v1 = p_1 - p_3
     v2 = p_2 - p_3
 
-    #The plane normal , n = [a,b,c]
+    #The plane normal is then the cross product of these two vectors, n = [a,b,c]
     n = np.cross(v1,v2)
     
-    #Plane, pI = [n,d] = [a,b,c,d]
-    a,b,c = n
+    #distance from the plane to the origin
     d = -np.dot(p_3,np.cross(p_1,p_2))
-    pI = np.array([a,b,c,d])
     
+    #Plane, pI = [n,d] = [a,b,c,d]
+    pI = np.array([n[0],n[1],n[2],d])
+    
+    #Criteria for a point to be in the plane is x_h . Pi ~ 0 is satisfied.
     #p_h = [x,y,z,1]
     p_1_h = np.append(p_1,1)
     p_2_h = np.append(p_2,1)
     p_3_h = np.append(p_3,1)
-
-    #Criteria for a point to be in the plane is that the equation x_h . Pi = 0 is satisfied.
+    
     c1 = np.dot(p_1_h,pI)
     c2 = np.dot(p_2_h,pI)
     c3 = np.dot(p_3_h,pI)
     
-    conditions = [np.around(c1,decimals=6) == 0,
-    np.around(c3,decimals=6) == 0,
-    np.around(c3,decimals=6) == 0]
+    conditions = [np.around(c1,decimals=7) == 0,
+    np.around(c3,decimals=7) == 0,
+    np.around(c3,decimals=7) == 0]
 
     if all(conditions):
-        return pI, c1
+        #print("The plane equation is {0}x + {1}y + {2}z = {3}".format(pI[0],pI[1],pI[2],pI[3]))
+        return pI
     else:
         return None
 
-def ransacPlane(pointData,goal_inliers,k_max,stop_at_goal = True):
-    len_data = list(range(0,len(pointData)))
-    best_fit = np.zeros(4)
-    best_inlier = 0
-    cnt_inliers = 0
-    k = 0
-    while best_inlier < goal_inliers:
-        pI,thresh_inlier = estimatePlane(pointData,len_data)   
+def ransacPlane(pointData,d,k_max,t,stop_at_goal = True):
+    best_fit = None
+    best_error = np.inf
+    best_inlier_indexs = None
+    goal_inliers = d
+    ite = 0
+
+    while ite < k_max:
+        #maybe inliers
+        maybe_indxs = random.sample(list(range(0,len(pointData))),3)
+        maybe_inliers = pointData[maybe_indxs,:]
+        maybe_model = estimatePlane(maybe_inliers)
+        n = [maybe_model[0],maybe_model[1],maybe_model[2]]
+        also_inliers = []   
         for point in pointData:
             point = np.append(point,1)
-            error = np.dot(point,pI)
-            if error < thresh_inlier:
-                cnt_inliers = cnt_inliers + 1
+            num = np.linalg.norm(np.dot(point,maybe_model))
+            dem = np.linalg.norm(n)
+            error = num/dem
 
-        if cnt_inliers > goal_inliers and stop_at_goal:
-            best_inlier = cnt_inliers
-            best_fit[0], best_fit[1], best_fit[2], best_fit[3] = pI/pI[2]
+            if error < t:
+                also_inliers.append(point)
 
-            print("Iteration Number {0}".format(k))
+        if len(also_inliers) > goal_inliers and stop_at_goal:
+            best_inlier = len(also_inliers)
+            best_fit = maybe_model/maybe_model[2]
+            print("Iteration Number {0}".format(ite))
             print("Number of inliers is {0}".format(best_inlier))
             print("The plane equation is {0}x + {1}y + {2}z = {3}".format(best_fit[0],best_fit[1],best_fit[2],best_fit[3]))
-        k = k + 1
+        ite =+ 1
     return best_fit
 
 
