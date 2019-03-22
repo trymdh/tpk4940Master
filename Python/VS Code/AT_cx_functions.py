@@ -601,7 +601,7 @@ def ransacPlane(pointData,d,k_max,t,return_all = False):
             num = np.dot(point,maybe_model)
             den = np.linalg.norm(n)
             error = -num/den
-            error = error/1000
+        
             #if the distance from plane is acceptable, add point as an inlier.
             if np.abs(error) < t:
                 also_inliers.append(point)
