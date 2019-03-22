@@ -27,7 +27,7 @@ def weights(Errors1,Errors2,mode):
             rot_errors += error
 
         for i in range(len(Errors2[:,0])):   
-            t_error = Errors2[i,0]**2 + Errors2[i,1]**2 + Errors2[i,2]**2
+            t_error = np.sqrt(Errors2[i,0]**2 + Errors2[i,1]**2 + Errors2[i,2]**2)
             trans_errors += t_error
             temp_weights[str(i+1)] += t_error
         
