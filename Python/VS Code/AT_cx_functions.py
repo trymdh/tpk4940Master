@@ -582,38 +582,55 @@ def estimatePlane(P_rand):
     else:
         return None
 
-def ransacPlane(pointData,d,k_max,t,stop_at_goal = True):
+def ransacPlane(pointData,d,k_max,t,return_all = False):
     best_fit = None
     best_error = np.inf
     best_inlier_indexs = None
     goal_inliers = d
     ite = 0
-
     while ite < k_max:
         #maybe inliers
         maybe_indxs = random.sample(list(range(0,len(pointData))),3)
         maybe_inliers = pointData[maybe_indxs,:]
         maybe_model = estimatePlane(maybe_inliers)
-        n = [maybe_model[0],maybe_model[1],maybe_model[2]]
-        also_inliers = []   
+        n = [maybe_model[0],maybe_model[1],maybe_model[2]] 
+        also_inliers = []  
         for point in pointData:
             point = np.append(point,1)
-            num = np.linalg.norm(np.dot(point,maybe_model))
-            dem = np.linalg.norm(n)
-            error = num/dem
-
-            if error < t:
+            #if a point is in the plane then dist = pI.T . point / |n| is equal to zero
+            num = np.dot(point,maybe_model)
+            den = np.linalg.norm(n)
+            error = -num/den
+            error = error/1000
+            #if the distance from plane is acceptable, add point as an inlier.
+            if np.abs(error) < t:
                 also_inliers.append(point)
+        #check if the amount of total inliers is equal to or greater than the inlier criteria
+        if len(also_inliers) >= goal_inliers:
+            betterdata = np.asarray(also_inliers)
+            u,s,vh = np.linalg.svd(betterdata)
+            v = vh.T
+            bettermodel = v[:,3]
+            bettermodel = bettermodel/bettermodel[2]
+            for point in betterdata:
+                num = np.dot(point,bettermodel)
+                den = np.linalg.norm(n)
+                this_error = -num/den
+                if np.abs(this_error) < best_error:
+                    best_error = this_error
+                    best_inlier = len(betterdata)
+                    best_fit = bettermodel
+        ite = ite + 1
 
-        if len(also_inliers) > goal_inliers and stop_at_goal:
-            best_inlier = len(also_inliers)
-            best_fit = maybe_model/maybe_model[2]
-            print("Iteration Number {0}".format(ite))
-            print("Number of inliers is {0}".format(best_inlier))
-            print("The plane equation is {0}x + {1}y + {2}z = {3}".format(best_fit[0],best_fit[1],best_fit[2],best_fit[3]))
-        ite =+ 1
-    return best_fit
-
+    if best_fit is None:
+        raise ValueError("did not meet fit criteria")
+    if return_all:
+        print("Iteration Number {0}".format(ite))
+        print("Number of inliers is {0}".format(best_inlier))
+        print("The plane equation is {0}x + {1}y + {2}z = {3}".format(best_fit[0],best_fit[1],best_fit[2],best_fit[3]))  
+        return best_fit
+    else:
+        return best_fit
 
 #Matrix functions
 #--------------------------------------------------------------------------------------------------------------------------------

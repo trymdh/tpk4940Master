@@ -45,7 +45,7 @@ for i in range(1,len(laser_npy) + 1):
 
 ext_points = np.reshape(ext_points,(-1,3))
 ext_points = ext_points[2048:]
-ext_points = ext_points[::100]
+#ext_points = ext_points[::100]
 
 x = ext_points[:,0]
 y = ext_points[:,1]
@@ -119,14 +119,15 @@ A = np.matrix(tmp_A)
 
 x_fit = (A.T * A).I * A.T * B # x_fit = inverse(A' * A) * (A' * B)
 errors = B - A * x_fit
-residual = np.linalg.norm(errors)
+residual = np.linalg.norm(errors)/len(ext_points)
 
 print ("LS solution:")
 print ("%f x + %f y + %f = z" % (x_fit[0], x_fit[1], x_fit[2]))
 print ("residual:")
 print(residual)
 
-
+#lin_fit,res,rank,s = np.linalg.lstsq(A,B)
+#print(lin_fit,res,rank,s)
 #RANSAC
 #-------------------------------------------------------------------------------------------------------------------------------
 
@@ -137,6 +138,11 @@ print(residual)
 
 
 #------------------------------------------------------------------------------------------------------------------------------
+ext_points = ext_points[::100]
+
+x = ext_points[:,0]
+y = ext_points[:,1]
+z = ext_points[:,2]
 
 # plot raw data
 plt.figure(1)

@@ -46,7 +46,7 @@ ext_points = ext_points[2048:]
 ext_points = ext_points[::100]
 
 #RANSAC---------------------------------------------------------------
-best_fit = ransacPlane(ext_points,100,1000,7e3)
+best_fit = ransacPlane(ext_points,0.9*len(ext_points),1000,1e-4,True)
 
 a,b,c,d = best_fit
 #plot raw data
@@ -60,7 +60,6 @@ ax.scatter(x, y, z, color ='b')
 
 #plot planes
 X,Y,Z = getPlaneData(best_fit,ax)
-
 ax.plot_wireframe(X,Y,Z, color='r')
 ax.set_zlim(1200,0)
 ax.set_xlabel('x')
