@@ -13,8 +13,10 @@ C = getCentroid3D(x,y,z)
 
 #maybe inliers
 P_rand = G[random.sample(list(range(0,len(G))),3),:]
+print(P_rand)
 #maybe model made from maybe inliers
 pI = estimatePlane(P_rand)
+
 
 plt.figure(1)
 ax = plt.subplot(111, projection ='3d')
@@ -35,3 +37,5 @@ plt.show()
 
 a = [1,2,3]
 
+xx,zz = lsPlane(G)
+print(xx,zz)
