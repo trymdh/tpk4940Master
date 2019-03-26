@@ -18,33 +18,28 @@ ext_points = extractPoints(laser_npy,rMats,tvecs,K_inv)
 
 ext_points = np.reshape(ext_points,(-1,3))
 ext_points = ext_points[2048:]
-ext_points = ext_points[::50]
-#RANSAC---------------------------------------------------------------
-ransac_fit,err = ransacPlane(ext_points)
+ext_points = ext_points[::100]
 
-#Least square fit
-ls_fit,res =  lsPlane(ext_points,True)
-print(ls_fit)
+bestFit, bestError = ransacPlane(ext_points)
+print(bestFit/bestFit[2],bestError)
 
-#plot raw data
 x = ext_points[:,0]
 y = ext_points[:,1]
 z = ext_points[:,2]
 
+c = getCentroid3D(ext_points)
+normal = bestFit[0:3]
+d = -np.sum(c*normal)
+
 plt.figure(1)
 ax = plt.subplot(111, projection ='3d')
+
 ax.scatter(x, y, z, color ='b')
 
-#plot planes
-#LS:
-X,Y,Z = getPlaneData(ls_fit,ax,ls = True)
+X,Y,Z = getPlaneData(bestFit,ax,rnsc = True)
+Z = (-normal[0]*X - normal[1]*Y - d)*1./normal[2]
 ax.plot_wireframe(X,Y,Z, color='r')
 
-#RANSAC:
-X,Y,Z = getPlaneData(ransac_fit,ax,rnsc = True)
-ax.plot_wireframe(X,Y,Z, color='g')
-
-ax.set_zlim(1200,0)
 ax.set_xlabel('x')
 ax.set_ylabel('y')
 ax.set_zlabel('z')

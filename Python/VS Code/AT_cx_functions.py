@@ -506,9 +506,6 @@ def extractPoints(laser_npy,rMats,tvecs,K_inv):
                 ext_points = np.append(ext_points,fullcoord)
         j = j + 1
 
-    ext_points = np.reshape(ext_points,(-1,3))
-    ext_points = ext_points[2048:]
-    #ext_points = ext_points[::100]
     return ext_points
 
 def drawFrame(R,t):
@@ -553,7 +550,7 @@ def getCentroid3D(pointCloud):
     C.append(z_av)
     return C
 
-def getPlaneData(pI,ax):
+def getPlaneData(pI,ax,ls = False,rnsc = False):
     #This function takes the plane parameters and the matplotlib plot object as input 
     #and returns the data values needed to plot a wireframe using plt.subplot.plot_wireframe()
     xlim = ax.get_xlim()
@@ -561,22 +558,20 @@ def getPlaneData(pI,ax):
     X,Y = np.meshgrid(np.arange(xlim[0], xlim[1]),
                     np.arange(ylim[0], ylim[1]))
     Z = np.zeros(X.shape)
-    for r in range(X.shape[0]):
-        for c in range(X.shape[1]):
-            #z = a*X + b*Y + d    
-            Z[r,c] = pI[0] * X[r,c] + pI[1] * Y[r,c] + pI[2]
+    
+    if ls:
+        for r in range(X.shape[0]):
+            for c in range(X.shape[1]):
+                #z = a*X + b*Y + d    
+                Z[r,c] = pI[0] * X[r,c] + pI[1] * Y[r,c] + pI[3]
+
+    elif rnsc:
+        for r in range(X.shape[0]):
+            for c in range(X.shape[1]):
+                #z = a*X + b*Y + d    
+                Z[r,c] = -(pI[0] * X[r,c] + pI[1] * Y[r,c] + pI[3])/pI[2]
 
     return X,Y,Z
-
-def randomSample(data,samplesize):
-    P_rand = []
-    #generate a list of random selected indexes within min/max index range of the point data.
-    rand_index = random.sample(list(range(0,len(data))),samplesize)
-    for i in rand_index:
-        P_rand.append(data[i])
-    P_rand = np.asarray(P_rand)
-
-    return P_rand
 
 def estimatePlane(P_rand):
     #This function estimates a plane from three random points taken from a dataset and return the plane parameters
@@ -618,54 +613,36 @@ def estimatePlane(P_rand):
     else:
         return None
 
-def ransacPlane(pointData,d,k_max,t,return_all = False):
-    best_fit = None
-    best_error = np.inf
-    best_inlier_indexs = None
-    goal_inliers = d
+def ransacPlane(pointCloud):
     ite = 0
-    while ite < k_max:
-        #maybe inliers
-        maybe_indxs = np.random.choice(pointData.shape[0],3,replace = False)
-        maybe_inliers = pointData[maybe_indxs,:]
-        #fit model to the random sample
-        maybe_model = svd_AxB(maybe_inliers)
-        n = [maybe_model[0],maybe_model[1],maybe_model[2]] 
-        also_inliers = [] 
-        for point in pointData:
-            point = np.array(np.append(point,1)).reshape(1,4)
-            #if a point is in the plane then dist = pI.T . point / |n| is equal to zero
-            error = np.linalg.norm(point@maybe_model)
-            #if the distance from plane is acceptable, add point as an inlier.
-            if error < t:
-                also_inliers.append(point[0])
-        
-        #check if the amount of total inliers is equal to or greater than the inlier criteria
-        if len(also_inliers) >= goal_inliers:
-            betterdata = np.asarray(also_inliers)
-            maybe_indxs = random.sample(list(range(0,len(betterdata))),3)
-            maybe_inliers = betterdata[maybe_indxs,:]
-            bettermodel = svd_AxB(maybe_inliers)
-            bettermodel = bettermodel/bettermodel[2]
-            for point in betterdata:
-                #if a point is in the plane then dist = pI.T . point / |n| is equal to zero
-                this_error = np.abs(np.dot(maybe_model,point.T))/np.linalg.norm(n)
-                if this_error < best_error:
-                    best_error = this_error
-                    best_inlier = len(betterdata)
-                    best_fit = bettermodel
-
+    bestFit = None
+    bestError = np.inf
+    k = 1000
+    t = 0.1
+    goal_inliers = 0.5*len(pointCloud)
+    while ite < k:
+        maybeIndex = np.random.choice(pointCloud.shape[0],3,replace = False)
+        maybeInliers = pointCloud[maybeIndex,:]
+        maybeModel = svd_AxB(maybeInliers)
+        alsoInliers = []
+        for point in pointCloud:
+            if point not in maybeInliers:
+                point_h = np.append(point,1)
+                error = np.linalg.norm(point_h@maybeModel)
+                if error < t:
+                    alsoInliers.append(point)
+        #print(goal_inliers)
+        #print(len(alsoInliers))
+        if len(alsoInliers) > goal_inliers:
+            betterData = np.vstack([alsoInliers, maybeInliers])
+            betterModel = svd_AxB(betterData)
+            betterData = homogenify(betterData)
+            thisErr = np.linalg.norm(betterData@betterModel)
+            if thisErr < bestError:
+                bestFit = betterModel
+                bestError = thisErr
         ite = ite + 1
-
-    if best_fit is None:
-        raise ValueError("did not meet fit criteria")
-    if return_all:
-        print("Iteration Number {0}".format(ite))
-        print("Number of inliers is {0}".format(best_inlier))
-        print("The plane equation is {0}x + {1}y + {2}z = {3}".format(best_fit[0],best_fit[1],best_fit[2],best_fit[3]))  
-        return best_fit
-    else:
-        return best_fit
+    return bestFit,bestError
 
 def homogenify(G):
     H = []
@@ -674,10 +651,19 @@ def homogenify(G):
     return np.asarray(H)
 
 def svd_AxB(pointCloud):
+    """
+    C = getCentroid3D(pointCloud)
+    A = []
+    for point in pointCloud:
+        A.append(point-C)
+    A = np.asarray(A)
+    """
     if pointCloud.shape[1] == 3:
-        pointCloud = homogenify(pointCloud)
-    u,s,vt = np.linalg.svd(pointCloud)
-    x = vt[-1,:]
+        A = homogenify(pointCloud)
+    
+    u,s,vh = np.linalg.svd(A)
+    v = vh.conj().transpose()
+    x = v[:,-1]
     return x
 
 def lsPlane(pointCloud,print_out = False):
@@ -707,21 +693,26 @@ def lsPlane(pointCloud,print_out = False):
     b = np.matrix(b).T
 
     #A*fit = B 
-    # => (A.T * A) * fit = A.T * B
-    # => fit = (A.T * A)^(-1) * A.T * B
-    fit = (A.T @ A).I @ A.T @ b # x_fit = inverse(A' * A) * (A' * B)
+    # => (A' * A) * fit = A' * B
+    # => fit = (A' * A)^(-1) * A' * B
+    #fit = (A' * A)^(-1) * (A' * B)
+    fit = (A.T @ A).I @ A.T @ b 
 
     #error = vertical offset between point and plane
     error = b - A @ fit
     
     #Frobenius norm
     residual = np.linalg.norm(error) 
+    
     if print_out:
         print ("LS solution:")
+        #fit[0] = a, fit[1] = b, fit[2] = d, c = 1
         print ("%f x + %f y + %f = z" % (fit[0], fit[1], fit[2]))
         print ("residual:")
         print(residual)
-
+    
+    #reshape fit into ax + by + cz + d     
+    fit = np.insert(fit,2,1,axis = 0)
     return fit,residual
          
 #Matrix functions
