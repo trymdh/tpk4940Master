@@ -450,8 +450,8 @@ def loadCaliParam():
     obtained from Matlab into numpy arrays
     """
     #path to the folder where the parameters are saved
-    caliParam_folder = "C:/Users/trymdh.WIN-NTNU-NO/OneDrive/tpk4940Master/Matlab" #work pc
-    #caliParam_folder = "C:/Users/Trym/OneDrive/tpk4940Master/Matlab" # home pc
+    #caliParam_folder = "C:/Users/trymdh.WIN-NTNU-NO/OneDrive/tpk4940Master/Matlab" #work pc
+    caliParam_folder = "C:/Users/Trym/OneDrive/tpk4940Master/Matlab" # home pc
     #caliParam_folder = "C:/Users/TrymAsus/OneDrive/tpk4940Master/Matlab" #LAPTOP
 
     os.chdir(caliParam_folder)
@@ -558,7 +558,6 @@ def getPlaneData(pI,ax,ls = False,rnsc = False):
     X,Y = np.meshgrid(np.arange(xlim[0], xlim[1]),
                     np.arange(ylim[0], ylim[1]))
     Z = np.zeros(X.shape)
-    
     if ls:
         for r in range(X.shape[0]):
             for c in range(X.shape[1]):
@@ -569,7 +568,7 @@ def getPlaneData(pI,ax,ls = False,rnsc = False):
         for r in range(X.shape[0]):
             for c in range(X.shape[1]):
                 #z = a*X + b*Y + d    
-                Z[r,c] = -(pI[0] * X[r,c] + pI[1] * Y[r,c] + pI[3])/pI[2]
+                Z[r,c] = -(pI[0] * X[r,c] + pI[1] * Y[r,c] + pI[3])*1./pI[2]
 
     return X,Y,Z
 
@@ -617,23 +616,26 @@ def ransacPlane(pointCloud):
     ite = 0
     bestFit = None
     bestError = np.inf
-    k = 1000
-    t = 0.1
+    centroid = None
+    k = 2000
+    t = 1 #mm
     goal_inliers = 0.5*len(pointCloud)
     while ite < k:
         maybeIndex = np.random.choice(pointCloud.shape[0],3,replace = False)
         maybeInliers = pointCloud[maybeIndex,:]
         maybeModel = svd_AxB(maybeInliers)
+        n = maybeModel[0:3]
+        c = getCentroid3D(maybeInliers)
         alsoInliers = []
+        cnt_in = 0
         for point in pointCloud:
             if point not in maybeInliers:
                 point_h = np.append(point,1)
                 error = np.linalg.norm(point_h@maybeModel)
-                if error < t:
+                if np.abs(error) < t:
                     alsoInliers.append(point)
-        #print(goal_inliers)
-        #print(len(alsoInliers))
-        if len(alsoInliers) > goal_inliers:
+                    cnt_in = cnt_in + 1
+        if cnt_in > goal_inliers:
             betterData = np.vstack([alsoInliers, maybeInliers])
             betterModel = svd_AxB(betterData)
             betterData = homogenify(betterData)
@@ -641,8 +643,11 @@ def ransacPlane(pointCloud):
             if thisErr < bestError:
                 bestFit = betterModel
                 bestError = thisErr
+                centroid = getCentroid3D(betterData)
+                print(bestError)
+                print(cnt_in)
         ite = ite + 1
-    return bestFit,bestError
+    return bestFit,centroid,bestError
 
 def homogenify(G):
     H = []
