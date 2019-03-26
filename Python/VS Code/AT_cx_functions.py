@@ -617,9 +617,10 @@ def ransacPlane(pointCloud):
     bestFit = None
     bestError = np.inf
     centroid = None
-    k = 2000
-    t = 1 #mm
-    goal_inliers = 0.5*len(pointCloud)
+    k = 10000
+    t = 0.1 #mm
+    #best_cnt_in = 0.5*len(pointCloud)
+    best_cnt_in = 0
     while ite < k:
         maybeIndex = np.random.choice(pointCloud.shape[0],3,replace = False)
         maybeInliers = pointCloud[maybeIndex,:]
@@ -634,18 +635,19 @@ def ransacPlane(pointCloud):
                 error = np.linalg.norm(point_h@maybeModel)
                 if np.abs(error) < t:
                     alsoInliers.append(point)
-                    cnt_in = cnt_in + 1
-        if cnt_in > goal_inliers:
+                    cnt_in += 1
+        if cnt_in > best_cnt_in:
             betterData = np.vstack([alsoInliers, maybeInliers])
             betterModel = svd_AxB(betterData)
             betterData = homogenify(betterData)
             thisErr = np.linalg.norm(betterData@betterModel)
             if thisErr < bestError:
+                best_cnt_in = cnt_in
                 bestFit = betterModel
                 bestError = thisErr
                 centroid = getCentroid3D(betterData)
                 print(bestError)
-                print(cnt_in)
+                print(cnt_in) 
         ite = ite + 1
     return bestFit,centroid,bestError
 

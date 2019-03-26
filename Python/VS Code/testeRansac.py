@@ -27,18 +27,12 @@ x = ext_points[:,0]
 y = ext_points[:,1]
 z = ext_points[:,2]
 
-
-normal = bestFit[0:3]
-d = -np.sum(c*normal)
-
 plt.figure(1)
 ax = plt.subplot(111, projection ='3d')
 
 ax.scatter(x, y, z, color ='b')
 
 X,Y,Z = getPlaneData(bestFit,ax,rnsc = True)
-
-#Z = (-normal[0]*X - normal[1]*Y - d)*1./normal[2]
 
 ax.plot_wireframe(X,Y,Z, color='r')
 ax.set_zlim(np.max(z),0)
