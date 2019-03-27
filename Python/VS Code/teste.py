@@ -18,10 +18,9 @@ ext_points = extractPoints(laser_npy,rMats,tvecs,K_inv)
 
 ext_points = np.reshape(ext_points,(-1,3))
 ext_points = ext_points[2048:]
-ext_points = ext_points[::50]
+ext_points = ext_points[::100]
 #RANSAC---------------------------------------------------------------
-ransac_fit,c,err = ransacPlane(ext_points)
-print(ransac_fit)
+ransac_fit,c,res = ransacPlane(ext_points)
 
 #Least square fit
 #ls_fit = [3.33, 10.31, 1 , 413] = [a b c d]
@@ -42,7 +41,7 @@ X,Y,Z = getPlaneData(ls_fit,ax,ls = True)
 ax.plot_wireframe(X,Y,Z, color='r')
 
 #RANSAC:
-X,Y,Z = getPlaneData(ransac_fit,ax,rnsc = True)
+X,Y,Z = getPlaneData(ransac_fit,ax,ls = True)
 ax.plot_wireframe(X,Y,Z, color='g')
 
 ax.set_zlim(1200,0)

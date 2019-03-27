@@ -615,46 +615,46 @@ def estimatePlane(P_rand):
 def ransacPlane(pointCloud):
     ite = 0
     bestFit = None
-    bestError = np.inf
+    bestRes = np.inf
     centroid = None
-    k = 1000
-    t = 0.1 #mm
-    #best_cnt_in = 0.5*len(pointCloud)
+    k = 5000
     best_cnt_in = 0
     while ite < k:
         maybeIndex = np.random.choice(pointCloud.shape[0],3,replace = False)
         maybeInliers = pointCloud[maybeIndex,:]
-        maybeModel = svd_AxB(maybeInliers)
-        #X = maybeInliers[0]-np.array([0.1,0.1,0.1])
-        #X_h = np.append(X,1)
-        #t = np.linalg.norm(np.dot(maybeModel,X_h.T))
-        n = maybeModel[0:3]
-        c = getCentroid3D(maybeInliers)
-        
-        alsoInliers = []
-        cnt_in = 0
+        maybeModel = svd_AxB(homogenify(maybeInliers))
+        error = 0
+        error_list = []
         for point in pointCloud:
-            if not point in maybeInliers:
-                point_h = np.append(point,1)
-                error = np.linalg.norm(np.dot(maybeModel,point_h.T))
-                if error < t:
-                    alsoInliers.append(point)
-                    cnt_in += 1
-                    
+            point_h = np.append(point,1)
+            error_list.append(np.dot((point - maybeModel[3]*maybeModel[0:3]),maybeModel[0:3]))
+        median_error = np.median(error_list)
+        error_std = np.std(error_list)
+
+        i = 0
+        cnt_in = 0
+        alsoInliers = []
+        for error in error_list:
+            if np.abs(error) < median_error + error_std:
+                cnt_in += 1
+                alsoInliers.append(pointCloud[i])
+            i += 1
+        alsoInliers = np.array(alsoInliers)       
         if cnt_in > best_cnt_in:
-            betterData = np.vstack([alsoInliers, maybeInliers])
-            betterModel = svd_AxB(betterData)
-            betterData = homogenify(betterData)
-            thisErr = np.linalg.norm(betterData@betterModel)
-            if thisErr < bestError:
+            betterData = alsoInliers
+            betterFit,betterRes = lsPlane(betterData)
+            if (betterRes < bestRes) and (cnt_in > best_cnt_in):
                 best_cnt_in = cnt_in
-                bestFit = betterModel
-                bestError = thisErr
-                centroid = getCentroid3D(betterData)
-                print(bestError)
-                print(cnt_in) 
+                bestRes = betterRes
+                bestFit = betterFit
+                centroid = getCentroid3D(alsoInliers)
+                print("\nIteration {0}".format(ite))
+                print(bestFit)
+                print(bestRes)
+                print("Inlier count: {0} / {1}".format(best_cnt_in,len(pointCloud)))
+
         ite = ite + 1
-    return bestFit,centroid,bestError
+    return bestFit,centroid,bestRes
 
 def homogenify(G):
     H = []
@@ -678,13 +678,9 @@ def svd_AxB(pointCloud):
         A.append(point-C)
     A = np.asarray(A)
     """
-    if pointCloud.shape[1] == 3:
-        A = homogenify(pointCloud)
-    u,s,vh = np.linalg.svd(A)
-    tol = max(1e-13,0*s[0])
-    nnz = (s >= tol).sum()
-    x = vh[nnz:].conj().T
-    #x /= x[2]
+    u,s,vh = np.linalg.svd(pointCloud)
+    v = vh.conj().T
+    x = v[:,-1]
     return x.T.reshape(-1)
 
 def lsPlane(pointCloud,print_out = False):
@@ -721,7 +717,7 @@ def lsPlane(pointCloud,print_out = False):
 
     #error = vertical offset between point and plane
     error = b - A @ fit
-    
+
     #Frobenius norm
     residual = np.linalg.norm(error) 
     

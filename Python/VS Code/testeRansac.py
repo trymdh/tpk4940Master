@@ -17,10 +17,9 @@ laser_npy = glob.glob(laser_npy)
 ext_points = extractPoints(laser_npy,rMats,tvecs,K_inv)
 
 ext_points = ext_points[2048:]
-ext_points = ext_points[::100]
+ext_points = ext_points[::50]
 
 bestFit,c,bestError = ransacPlane(ext_points)
-print(bestFit,bestError)
 
 x = ext_points[:,0]
 y = ext_points[:,1]
@@ -31,7 +30,7 @@ ax = plt.subplot(111, projection ='3d')
 
 ax.scatter(x, y, z, color ='b')
 
-X,Y,Z = getPlaneData(bestFit,ax,rnsc = True)
+X,Y,Z = getPlaneData(bestFit,ax,ls = True)
 
 ax.plot_wireframe(X,Y,Z, color='r')
 ax.set_zlim(np.max(z),0)
