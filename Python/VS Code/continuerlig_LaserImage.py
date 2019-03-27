@@ -15,5 +15,5 @@ for i in range(0,1000):
 
     plt.plot(laserpixel)
     plt.pause(1/(3*60))
-
+print("hei")
 plt.show()
