@@ -1,8 +1,8 @@
 import numpy as np
 from matplotlib import pyplot as plt
 import matplotlib.animation as animation
-#import cx.cx_cam as cam
-#import cx.cx_base as base
+import cx.cx_cam as cam
+import cx.cx_base as base
 import cv2
 import os
 import time
@@ -450,8 +450,8 @@ def loadCaliParam():
     obtained from Matlab into numpy arrays
     """
     #path to the folder where the parameters are saved
-    #caliParam_folder = "C:/Users/trymdh.WIN-NTNU-NO/OneDrive/tpk4940Master/Matlab" #work pc
-    caliParam_folder = "C:/Users/Trym/OneDrive/tpk4940Master/Matlab" # home pc
+    caliParam_folder = "C:/Users/trymdh.WIN-NTNU-NO/OneDrive/tpk4940Master/Matlab" #work pc
+    #caliParam_folder = "C:/Users/Trym/OneDrive/tpk4940Master/Matlab" # home pc
     #caliParam_folder = "C:/Users/TrymAsus/OneDrive/tpk4940Master/Matlab" #LAPTOP
 
     os.chdir(caliParam_folder)
@@ -505,7 +505,7 @@ def extractPoints(laser_npy,rMats,tvecs,K_inv):
                 fullcoord = np.array([norm_img_coord * d]) + l_0
                 ext_points = np.append(ext_points,fullcoord)
         j = j + 1
-
+    ext_points = np.reshape(ext_points,(-1,3))
     return ext_points
 
 def drawFrame(R,t):
@@ -617,7 +617,7 @@ def ransacPlane(pointCloud):
     bestFit = None
     bestError = np.inf
     centroid = None
-    k = 10000
+    k = 1000
     t = 0.1 #mm
     #best_cnt_in = 0.5*len(pointCloud)
     best_cnt_in = 0
@@ -625,17 +625,22 @@ def ransacPlane(pointCloud):
         maybeIndex = np.random.choice(pointCloud.shape[0],3,replace = False)
         maybeInliers = pointCloud[maybeIndex,:]
         maybeModel = svd_AxB(maybeInliers)
+        #X = maybeInliers[0]-np.array([0.1,0.1,0.1])
+        #X_h = np.append(X,1)
+        #t = np.linalg.norm(np.dot(maybeModel,X_h.T))
         n = maybeModel[0:3]
         c = getCentroid3D(maybeInliers)
+        
         alsoInliers = []
         cnt_in = 0
         for point in pointCloud:
-            if point not in maybeInliers:
+            if not point in maybeInliers:
                 point_h = np.append(point,1)
-                error = np.linalg.norm(point_h@maybeModel)
-                if np.abs(error) < t:
+                error = np.linalg.norm(np.dot(maybeModel,point_h.T))
+                if error < t:
                     alsoInliers.append(point)
                     cnt_in += 1
+                    
         if cnt_in > best_cnt_in:
             betterData = np.vstack([alsoInliers, maybeInliers])
             betterModel = svd_AxB(betterData)
@@ -657,6 +662,14 @@ def homogenify(G):
         H.append(np.append(point,1))
     return np.asarray(H)
 
+def standDev(pointCloud):
+    sigma_enum = 0
+    c = getCentroid3D(pointCloud)
+    for point in pointCloud:
+        sigma_enum += ((point[0] - c[0])**2 +(point[1] - c[1])**2 + (point[2] - c[2])**2)
+    sigma = sigma_enum/len(pointCloud)
+    return np.sqrt(sigma)
+
 def svd_AxB(pointCloud):
     """
     C = getCentroid3D(pointCloud)
@@ -667,11 +680,12 @@ def svd_AxB(pointCloud):
     """
     if pointCloud.shape[1] == 3:
         A = homogenify(pointCloud)
-    
     u,s,vh = np.linalg.svd(A)
-    v = vh.conj().transpose()
-    x = v[:,-1]
-    return x
+    tol = max(1e-13,0*s[0])
+    nnz = (s >= tol).sum()
+    x = vh[nnz:].conj().T
+    #x /= x[2]
+    return x.T.reshape(-1)
 
 def lsPlane(pointCloud,print_out = False):
     """
@@ -679,12 +693,12 @@ def lsPlane(pointCloud,print_out = False):
     https://stackoverflow.com/questions/1400213/3d-least-squares-plane
     """
     # A * x_fit = b => 
-    # (ax + by + d = z)
+    # (ax + by + d = -z)
     # where A = [[x1 y1 1], 
     #            [x2 y2 1],
     #               ...   ,
     #            [xn yn 1]]
-    # b = [z1, z2, ... , zn].T
+    # b = [-z1, -z2, ... , -zn].T
     # and x_fit = [a b d]
 
     x = pointCloud[:,0]
@@ -714,7 +728,7 @@ def lsPlane(pointCloud,print_out = False):
     if print_out:
         print ("LS solution:")
         #fit[0] = a, fit[1] = b, fit[2] = d, c = 1
-        print ("%f x + %f y + %f = z" % (fit[0], fit[1], fit[2]))
+        print ("%f x - %f y - %f = z" % (fit[0], fit[1], fit[2]))
         print ("residual:")
         print(residual)
     

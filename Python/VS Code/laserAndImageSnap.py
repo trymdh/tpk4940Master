@@ -38,7 +38,7 @@ else:
     np.save(save_name,laserpixel)
 
 #plt.gca().invert_yaxis()
-#plt.plot(laserlineimage.ravel() / 64)
+#plt.plot(laserpixel)
 #plt.show()
 
 #Snap an image in image mode and save it

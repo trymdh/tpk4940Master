@@ -8,15 +8,14 @@ from AT_cx_functions import*
 #load all the calibration parameters
 ret,K,tvecs,rMats,dist = loadCaliParam()
 K_inv = np.linalg.inv(K)
-os.chdir('C:/Users/Trym/OneDrive/Master/VS Code/laserimage') #home pc
-#os.chdir('C:/Users/trymdh.WIN-NTNU-NO/OneDrive/Master/VS Code/laserimage') #work pc
+#os.chdir('C:/Users/Trym/OneDrive/Master/VS Code/laserimage') #home pc
+os.chdir('C:/Users/trymdh.WIN-NTNU-NO/OneDrive/Master/VS Code/laserimage') #work pc
 #os.chdir('C:/Users/TrymAsus/OneDrive/Master/VS Code/laserimage')#LAPTOP
 
 laser_npy = os.getcwd().replace("\\","/") + "/*.npy"
 laser_npy = glob.glob(laser_npy)
 ext_points = extractPoints(laser_npy,rMats,tvecs,K_inv)
 
-ext_points = np.reshape(ext_points,(-1,3))
 ext_points = ext_points[2048:]
 ext_points = ext_points[::100]
 

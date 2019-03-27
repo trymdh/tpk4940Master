@@ -8,8 +8,8 @@ from AT_cx_functions import*
 #load all the calibration parameters
 ret,K,tvecs,rMats,dist = loadCaliParam()
 K_inv = np.linalg.inv(K)
-os.chdir('C:/Users/Trym/OneDrive/Master/VS Code/laserimage') #home pc
-#os.chdir('C:/Users/trymdh.WIN-NTNU-NO/OneDrive/Master/VS Code/laserimage') #work pc
+#os.chdir('C:/Users/Trym/OneDrive/Master/VS Code/laserimage') #home pc
+os.chdir('C:/Users/trymdh.WIN-NTNU-NO/OneDrive/Master/VS Code/laserimage') #work pc
 #os.chdir('C:/Users/TrymAsus/OneDrive/Master/VS Code/laserimage')#LAPTOP
 
 laser_npy = os.getcwd().replace("\\","/") + "/*.npy"
@@ -21,10 +21,11 @@ ext_points = ext_points[2048:]
 ext_points = ext_points[::50]
 #RANSAC---------------------------------------------------------------
 ransac_fit,c,err = ransacPlane(ext_points)
+print(ransac_fit)
 
 #Least square fit
+#ls_fit = [3.33, 10.31, 1 , 413] = [a b c d]
 ls_fit,res =  lsPlane(ext_points,True)
-print(ls_fit)
 
 #plot raw data
 x = ext_points[:,0]
