@@ -628,8 +628,10 @@ def ransacPlane(pointCloud):
     ite = 0
     bestFit = None
     bestRes = np.inf
-    k = 5000
+    centroid = None
+    k = 2000
     best_cnt_in = 0
+    goal_inlier = 0.8*len(pointCloud)
     while ite < k:
         #sample 3 random points and estimate plane
         maybeIndex = np.random.choice(pointCloud.shape[0],3,replace = False)
@@ -643,10 +645,9 @@ def ransacPlane(pointCloud):
         alsoInliers = countInliers(error_vec, median_error,error_std,pointCloud)
         cnt_in = len(alsoInliers)
         
-        if cnt_in > best_cnt_in:
+        if cnt_in >= goal_inlier:
             betterData = alsoInliers
-
-            #The new dataset contains inliers => use LS to estimate plane
+            #The new dataset contains few outliers => use LS to estimate plane
             betterFit,betterRes = lsPlane(betterData)
 
             if (betterRes < bestRes) and (cnt_in > best_cnt_in):
@@ -655,11 +656,13 @@ def ransacPlane(pointCloud):
                 n /= np.linalg.norm(n)
                 centroid = getCentroid3D(betterData)
                 bestFit = betterFit
-                #bestFit = np.array([n[0],n[1],n[2],d])
                 print("\nIteration {0}".format(ite))
-                print(bestFit)
-                print(bestRes)
                 print("Inlier count: {0} / {1}".format(best_cnt_in,len(pointCloud)))
+                print ("%f x - %f y - %f = z" % (bestFit[0], bestFit[1], bestFit[2]))
+                print ("residual:")
+                print(bestRes)
+                
+
         ite += 1
     return bestFit,centroid,bestRes
 
@@ -739,7 +742,6 @@ def lsPlane(pointCloud,print_out = False):
     #reshape fit into ax + by + cz + d     
     #fit = np.insert(fit,2,1,axis = 0)
     return fit,residual
-
 
 #Matrix functions
 #--------------------------------------------------------------------------------------------------------------------------------

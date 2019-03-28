@@ -18,7 +18,7 @@ ext_points = extractPoints(laser_npy,rMats,tvecs,K_inv)
 #maybeIndex = np.random.choice(ext_points.shape[0],3,replace = False)
 #G = ext_points
 #G = ext_points[maybeIndex,:]
-G = np.array([[1,0,0],[0,0,0],[1,1,0]])
+G = np.array([[1,0,0],[0,1,1],[1,1,0]])
 
 x = G[:,0]
 y = G[:,1]
@@ -39,18 +39,16 @@ X = np.array(X).reshape(-1,3)
 #maybe model made from maybe inliers
 G_h = homogenify(G)
 pI = svd_AxB(G_h)
-n,c,d = svd_AxB(G_h,norm = True)
+n,c = svd_AxB(G_h,norm = True, cent = True)
 
 print(np.around(n,decimals=2), c)
 
-xxx = [0,0,-8]
+xxx = [0,0,-5,1]
 xxx = np.array(xxx)
 #pI = np.array([0,0,-1,3])
 d = (np.dot((xxx[0:3] - pI[3]*pI[0:3]),pI[0:3]))
-d1 = np.dot((xxx-c),n)
-print(np.linalg.norm(n))
+
 #print(pI/pI[2])
-print(d,d1)
 
 error = 0
 error_list = []
@@ -96,7 +94,7 @@ ax.scatter(x, y, z, color ='b')
 ax.scatter(xx_o,yy_o,zz_o, s = 10 ,color = 'r', marker = "x")
 ax.scatter(xx_i,yy_i,zz_i, s = 10 ,color = 'g', marker = "o")
 ax.scatter(C[0],C[1],C[2], s = 10 ,color = 'y', marker = "x")
-"""
+
 
 #plot planes
 X,Y,Z = getPlaneData(pI,ax,rnsc = True)
@@ -110,4 +108,3 @@ ax.set_ylabel('y')
 ax.set_zlabel('z')
 plt.show()
 
-"""
