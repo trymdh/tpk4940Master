@@ -450,6 +450,7 @@ def loadCaliParam():
     obtained from Matlab into numpy arrays
     """
     #path to the folder where the parameters are saved
+    
     caliParam_folder = "C:/Users/trymdh.WIN-NTNU-NO/OneDrive/tpk4940Master/Matlab" #work pc
     #caliParam_folder = "C:/Users/Trym/OneDrive/tpk4940Master/Matlab" # home pc
     #caliParam_folder = "C:/Users/TrymAsus/OneDrive/tpk4940Master/Matlab" #LAPTOP
@@ -550,7 +551,7 @@ def getCentroid3D(pointCloud):
     C.append(z_av)
     return C
 
-def getPlaneData(pI,ax,ls = False,rnsc = False):
+def getPlaneData(pI,ax,ls = False, svd = False):
     #This function takes the plane parameters and the matplotlib plot object as input 
     #and returns the data values needed to plot a wireframe using plt.subplot.plot_wireframe()
     xlim = ax.get_xlim()
@@ -562,13 +563,13 @@ def getPlaneData(pI,ax,ls = False,rnsc = False):
         for r in range(X.shape[0]):
             for c in range(X.shape[1]):
                 #z = a*X + b*Y + d    
-                Z[r,c] = pI[0] * X[r,c] + pI[1] * Y[r,c] + pI[3]
+                Z[r,c] = pI[0] * X[r,c] + pI[1] * Y[r,c] + pI[2]
 
-    elif rnsc:
+    elif svd:
         for r in range(X.shape[0]):
             for c in range(X.shape[1]):
                 #z = a*X + b*Y + d    
-                Z[r,c] = -(pI[0] * X[r,c] + pI[1] * Y[r,c] + pI[3])*1./pI[2]
+                Z[r,c] = -(pI[0] * X[r,c] + pI[1] * Y[r,c] + pI[3])*1./(pI[2])
 
     return X,Y,Z
 
@@ -612,48 +613,54 @@ def estimatePlane(P_rand):
     else:
         return None
 
+def getError(pointCloud,n,c,d):
+    error = 0
+    error_list = []
+    for point in pointCloud:
+        point_h = np.append(point,1)
+        error_list.append(np.dot((point - c),n))
+    error_vec = np.array(error_list)
+    median_error = np.median(error_list)
+    error_std = np.std(error_list)
+    return error_vec,median_error,error_std
+
 def ransacPlane(pointCloud):
     ite = 0
     bestFit = None
     bestRes = np.inf
-    centroid = None
     k = 5000
     best_cnt_in = 0
     while ite < k:
+        #sample 3 random points and estimate plane
         maybeIndex = np.random.choice(pointCloud.shape[0],3,replace = False)
         maybeInliers = pointCloud[maybeIndex,:]
-        maybeModel = svd_AxB(homogenify(maybeInliers))
-        error = 0
-        error_list = []
-        for point in pointCloud:
-            point_h = np.append(point,1)
-            error_list.append(np.dot((point - maybeModel[3]*maybeModel[0:3]),maybeModel[0:3]))
-        median_error = np.median(error_list)
-        error_std = np.std(error_list)
+        n,c,d = svd_AxB(homogenify(maybeInliers))
 
-        i = 0
-        cnt_in = 0
-        alsoInliers = []
-        for error in error_list:
-            if np.abs(error) < median_error + error_std:
-                cnt_in += 1
-                alsoInliers.append(pointCloud[i])
-            i += 1
-        alsoInliers = np.array(alsoInliers)       
+        #calculate error and inlier threshold
+        error_vec,median_error,error_std = getError(pointCloud,n,c,d)
+        
+        #count inliers
+        alsoInliers = countInliers(error_vec, median_error,error_std,pointCloud)
+        cnt_in = len(alsoInliers)
+        
         if cnt_in > best_cnt_in:
             betterData = alsoInliers
+
+            #The new dataset contains inliers => use LS to estimate plane
             betterFit,betterRes = lsPlane(betterData)
+
             if (betterRes < bestRes) and (cnt_in > best_cnt_in):
                 best_cnt_in = cnt_in
                 bestRes = betterRes
+                n /= np.linalg.norm(n)
+                centroid = getCentroid3D(betterData)
                 bestFit = betterFit
-                centroid = getCentroid3D(alsoInliers)
+                #bestFit = np.array([n[0],n[1],n[2],d])
                 print("\nIteration {0}".format(ite))
                 print(bestFit)
                 print(bestRes)
                 print("Inlier count: {0} / {1}".format(best_cnt_in,len(pointCloud)))
-
-        ite = ite + 1
+        ite += 1
     return bestFit,centroid,bestRes
 
 def homogenify(G):
@@ -662,26 +669,27 @@ def homogenify(G):
         H.append(np.append(point,1))
     return np.asarray(H)
 
-def standDev(pointCloud):
-    sigma_enum = 0
-    c = getCentroid3D(pointCloud)
-    for point in pointCloud:
-        sigma_enum += ((point[0] - c[0])**2 +(point[1] - c[1])**2 + (point[2] - c[2])**2)
-    sigma = sigma_enum/len(pointCloud)
-    return np.sqrt(sigma)
-
 def svd_AxB(pointCloud):
-    """
-    C = getCentroid3D(pointCloud)
-    A = []
-    for point in pointCloud:
-        A.append(point-C)
-    A = np.asarray(A)
-    """
     u,s,vh = np.linalg.svd(pointCloud)
     v = vh.conj().T
     x = v[:,-1]
-    return x.T.reshape(-1)
+    x = x.T.reshape(-1)
+    c = getCentroid3D(pointCloud)
+    n = x[0:3]
+    d = x[3]
+    return n,c,d
+
+def countInliers(error_vec, median_error,error_std,pointCloud):
+    i = 0
+    cnt_in = 0
+    alsoInliers = []
+    for error in error_vec:
+        if np.abs(error) < median_error + error_std:
+            cnt_in += 1
+            alsoInliers.append(pointCloud[i])
+        i += 1
+    alsoInliers = np.array(alsoInliers)
+    return alsoInliers
 
 def lsPlane(pointCloud,print_out = False):
     """
@@ -712,10 +720,10 @@ def lsPlane(pointCloud,print_out = False):
     #A*fit = B 
     # => (A' * A) * fit = A' * B
     # => fit = (A' * A)^(-1) * A' * B
-    #fit = (A' * A)^(-1) * (A' * B)
+    #fit = (A' * A)^(-1) * (A' * B) = [a,b,d]
     fit = (A.T @ A).I @ A.T @ b 
-
     #error = vertical offset between point and plane
+    #error = z_i - z_proj
     error = b - A @ fit
 
     #Frobenius norm
@@ -729,9 +737,10 @@ def lsPlane(pointCloud,print_out = False):
         print(residual)
     
     #reshape fit into ax + by + cz + d     
-    fit = np.insert(fit,2,1,axis = 0)
+    #fit = np.insert(fit,2,1,axis = 0)
     return fit,residual
-         
+
+
 #Matrix functions
 #--------------------------------------------------------------------------------------------------------------------------------
 def skew(k):

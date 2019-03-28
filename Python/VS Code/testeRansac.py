@@ -4,6 +4,7 @@ from mpl_toolkits.mplot3d import Axes3D
 import os
 import glob
 from AT_cx_functions import*
+from Robotfun import*
 
 #load all the calibration parameters
 ret,K,tvecs,rMats,dist = loadCaliParam()
@@ -27,12 +28,13 @@ z = ext_points[:,2]
 
 plt.figure(1)
 ax = plt.subplot(111, projection ='3d')
-
-ax.scatter(x, y, z, color ='b')
+ax.scatter(x, y, z,color ='b')
+ax.scatter(0,0,0,'x',color = 'r')
+ax.scatter(c[0],c[1],c[2],'o',s = 50, color = 'r' )
 
 X,Y,Z = getPlaneData(bestFit,ax,ls = True)
 
-ax.plot_wireframe(X,Y,Z, color='r')
+ax.plot_wireframe(X,Y,Z, color='r',alpha = 0.2)
 ax.set_zlim(np.max(z),0)
 ax.set_xlabel('x')
 ax.set_ylabel('y')
