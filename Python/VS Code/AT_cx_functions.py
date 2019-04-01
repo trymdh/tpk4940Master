@@ -88,7 +88,6 @@ def snap(hDev):
     #result = cam.cx_closeDevice(hDev)
     #if result!=base.CX_STATUS_OK:
         #print("cx_closeDevice returned error %d" % (result))
-        
     return image
 
 def getSequence(num_img, hDev):

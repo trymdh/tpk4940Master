@@ -41,7 +41,7 @@ dead_array = np.zeros((2048,2))
 
 for i in range(0,2048):
     dead_array[i,0] = i
-print(dead_array)
+
 dead_points = triang(dead_array)
 
 def in1d_dot_approach(A,B):
@@ -49,7 +49,6 @@ def in1d_dot_approach(A,B):
     return A[~np.in1d(A.dot(cumdims),B.dot(cumdims))]
 
 for i in range(0,1000):
-
     #Snap an image of the scene in COG mode.
     laserlinepixels = snap(hDev)
     #reshape the COG-image from (2048,) to (2048,2)
@@ -78,11 +77,3 @@ for i in range(0,1000):
     ax.scatter3D(X,Y,Z)
     plt.pause(1/60)
     
-
-
-
-
-
-
-
-
