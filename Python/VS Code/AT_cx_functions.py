@@ -564,14 +564,17 @@ def getPlaneData(pI,ax,ls = False, svd = False):
             for c in range(X.shape[1]):
                 #z = a*X + b*Y + d    
                 Z[r,c] = pI[0] * X[r,c] + pI[1] * Y[r,c] + pI[2]
+        return X,Y,Z
 
     elif svd:
         for r in range(X.shape[0]):
             for c in range(X.shape[1]):
                 #z = a*X + b*Y + d    
                 Z[r,c] = -(pI[0] * X[r,c] + pI[1] * Y[r,c] + pI[3])*1./(pI[2])
-
-    return X,Y,Z
+        return X,Y,Z
+    if pI == None:
+        print('Plane not found')
+        return 0
 
 def estimatePlane(P_rand):
     #This function estimates a plane from three points and return the plane parameters

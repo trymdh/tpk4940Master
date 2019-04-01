@@ -1,6 +1,5 @@
 function writeCaliParam(cameraParams)
-%this function writes all the cameraParameters into .txt
-%files that can be imported into Python
+%this function writes all the cameraParameters into .txt files that can be imported into Python
 dlmwrite('IntrinsicMatrix.txt',cameraParams.IntrinsicMatrix.','delimiter','\t','newline','pc')
 dlmwrite('PrincipalPoint.txt',cameraParams.PrincipalPoint,'delimiter','\t','newline','pc')
 dlmwrite('RadialDistortion.txt',cameraParams.RadialDistortion,'delimiter','\t','newline','pc')

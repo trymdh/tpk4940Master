@@ -28,7 +28,6 @@ z = G[:,2]
 C = getCentroid3D(G)
 C_h = np.append(C,1)
 
-
 #generated pointCloud containing outliers and inliers
 X = []
 for i in range(0,1000):
@@ -63,8 +62,8 @@ xx_i = inliers[:,0]
 yy_i = inliers[:,1]
 zz_i = inliers[:,2]
 
-#in_plane = svd_AxB(homogenify(inliers))
-in_plane,res = lsPlane(inliers)
+in_plane = svd_AxB(homogenify(inliers))
+#in_plane,res = lsPlane(inliers)
 
 outliers = np.array(outliers)
 xx_o = outliers[:,0]
