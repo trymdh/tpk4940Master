@@ -38,26 +38,10 @@ X = np.array(X).reshape(-1,3)
 
 #maybe model made from maybe inliers
 G_h = homogenify(G)
-pI = svd_AxB(G_h)
-n,c = svd_AxB(G_h,norm = True, cent = True)
+n,c,d = svd_AxB(G_h)
+pI = np.append(n,d)
 
-print(np.around(n,decimals=2), c)
-
-xxx = [0,0,-5,1]
-xxx = np.array(xxx)
-#pI = np.array([0,0,-1,3])
-d = (np.dot((xxx[0:3] - pI[3]*pI[0:3]),pI[0:3]))
-
-#print(pI/pI[2])
-
-error = 0
-error_list = []
-for point in X:
-    point_h = np.append(point,1)
-    error_list.append(np.linalg.norm(np.dot(pI,point_h.T)))
-
-median_error = np.median(error_list)
-error_std = np.std(error_list)
+error_vec,median_error,error_std = getError(X,n,c,d)
 
 inliers= []
 outliers = []
@@ -65,7 +49,7 @@ cnt_in = 0
 cnt_out = 0
 
 i = 0
-for error in error_list:
+for error in error_vec:
     if np.abs(error) < median_error + 0.1*error_std:
         inliers.append(X[i])
         cnt_in += 1
@@ -79,8 +63,8 @@ xx_i = inliers[:,0]
 yy_i = inliers[:,1]
 zz_i = inliers[:,2]
 
-in_plane = svd_AxB(homogenify(inliers))
-#in_plane,res = lsPlane(inliers)
+#in_plane = svd_AxB(homogenify(inliers))
+in_plane,res = lsPlane(inliers)
 
 outliers = np.array(outliers)
 xx_o = outliers[:,0]
@@ -97,11 +81,11 @@ ax.scatter(C[0],C[1],C[2], s = 10 ,color = 'y', marker = "x")
 
 
 #plot planes
-X,Y,Z = getPlaneData(pI,ax,rnsc = True)
-X_i,Y_i,Z_i = getPlaneData(in_plane,ax,rnsc = True)
+X,Y,Z = getPlaneData(pI,ax,ls = True)
+X_i,Y_i,Z_i = getPlaneData(in_plane,ax,ls = True)
 
-#ax.plot_wireframe(X,Y,Z, color='r',alpha=0.5)
-#ax.plot_wireframe(X_i,Y_i,Z_i, color='br',alpha=0.5)
+ax.plot_wireframe(X,Y,Z, color='r',alpha=0.5)
+#ax.plot_wireframe(X_i,Y_i,Z_i, color='r',alpha=0.5)
 
 ax.set_xlabel('x')
 ax.set_ylabel('y')

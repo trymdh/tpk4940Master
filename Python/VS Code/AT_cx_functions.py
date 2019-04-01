@@ -574,7 +574,7 @@ def getPlaneData(pI,ax,ls = False, svd = False):
     return X,Y,Z
 
 def estimatePlane(P_rand):
-    #This function estimates a plane from three random points taken from a dataset and return the plane parameters
+    #This function estimates a plane from three points and return the plane parameters
     #if the condition for point to be in the plane is satisfied.
     p_1 = P_rand[0]
     p_2 = P_rand[1]
@@ -608,7 +608,6 @@ def estimatePlane(P_rand):
     np.around(c3,decimals=7) == 0]
 
     if all(conditions):
-        #print("The plane equation is {0}x + {1}y + {2}z = {3}".format(pI[0],pI[1],pI[2],pI[3]))
         return pI
     else:
         return None
@@ -662,7 +661,6 @@ def ransacPlane(pointCloud):
                 print ("residual:")
                 print(bestRes)
                 
-
         ite += 1
     return bestFit,centroid,bestRes
 

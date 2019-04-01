@@ -2,6 +2,7 @@ import numpy as np
 from loadCali import loadCaliParam
 import cv2 as cv2
 import time
+
 def triang(pix):
     t = time.time()
     ret,rets,K,tvecs,rMats,dist,rotVecError,transVecError = loadCaliParam()
