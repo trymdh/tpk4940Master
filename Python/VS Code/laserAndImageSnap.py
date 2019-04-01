@@ -23,8 +23,9 @@ laserpixel = pixCoordify(laserlinepixels.ravel() / 64 , 2048) #reshape the COG-i
 
 laserPixelList = os.getcwd().replace("\\","/") + "/*.npy"
 laserImageList = os.getcwd().replace("\\","/") + "/*.png"
-laserPixelList = glob.glob(laserPixelList)
-laserImageList = glob.glob(laserImageList)
+laserPixelList = sortList(glob.glob(laserPixelList))
+laserImageList = sortList(glob.glob(laserImageList))
+
 
 num_img = len(laserImageList)
 img_thresh = 20 #number of images needed for a good calibration, n < 20
