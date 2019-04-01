@@ -23,9 +23,7 @@ for i in range(0,1000):
     #Snap an image of the scene in COG mode.
     laserlinepixels = snap(hDev)
     #reshape the COG-image from (2048,) to (2048,2)
-
     laserpixel = pixCoordify(laserlinepixels.ravel() / 64 , 2048)
-    
     
     points = triang(laserpixel)
 

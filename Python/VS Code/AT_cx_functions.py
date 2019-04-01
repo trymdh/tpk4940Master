@@ -5,6 +5,7 @@ import cx.cx_cam as cam
 import cx.cx_base as base
 import cv2
 import os
+import re
 import time
 import random
 
@@ -383,6 +384,12 @@ def checkStatusCode(code):
 
 #OTHER
 #-----------------------------------------------------------------------------------------------------------------------------------
+def sortList(unsortedList):
+    #sort a list in alphanumeric order
+    convert = lambda text: int(text) if text.isdigit() else text.lower()
+    alphanum_key = lambda key: [convert(c) for c in re.split('([0-9]+)',key)]
+    return sorted(unsortedList,key = alphanum_key)
+
 def Img3STD(img):
     img_mean = np.mean(img.data)
     img_min = np.min(img.data)
@@ -451,17 +458,20 @@ def loadCaliParam():
     """
     #path to the folder where the parameters are saved
     
-    caliParam_folder = "C:/Users/trymdh.WIN-NTNU-NO/OneDrive/tpk4940Master/Matlab" #work pc
+    #Old calibration files
+    #caliParam_folder = "C:/Users/trymdh.WIN-NTNU-NO/OneDrive/tpk4940Master/Matlab" #work pc
     #caliParam_folder = "C:/Users/Trym/OneDrive/tpk4940Master/Matlab" # home pc
     #caliParam_folder = "C:/Users/TrymAsus/OneDrive/tpk4940Master/Matlab" #LAPTOP
-
-    os.chdir(caliParam_folder)
     
+    #New calibration files:
+    caliParam_folder = "C:/Users/trymdh.WIN-NTNU-NO/OneDrive/tpk4940Master/Espen Code/Matlab"
+    os.chdir(caliParam_folder)
+
     #Mean Reprojection Error
     ret = np.loadtxt('MeanReprojectionError.txt')
    
     #The Intrisinc Matrix
-    mtx = np.loadtxt('IntrinsicMatrix.txt')
+    mtx = np.loadtxt('./CalibrationConstants/calibratedCameraMatrix.txt')
     
     #Rotation Matrices and translation vectors between the scene and the camera
     tvecs = np.loadtxt('TranslationVectors.txt')
@@ -472,15 +482,16 @@ def loadCaliParam():
     
     #Radial and tangential distortion coeffecients, dist = [k_1,k_2,p_1,p_2[,k_3[,k_4,k_5,k_6]]]
     dist = []
-    rDist = np.loadtxt('RadialDistortion.txt') #k_1 and k_2, => k_3 = 0, this leads to dist = [k_1,k_2,p_1,p_2]
-    tDist = np.loadtxt('TangentialDistortion.txt') #p_1 and p_2
+    rDist = np.loadtxt('./CalibrationConstants/calibratedRaddist.txt') #k_1 and k_2, => k_3 = 0, this leads to dist = [k_1,k_2,p_1,p_2]
+    tDist = np.loadtxt('./CalibrationConstants/calibratedTangdist.txt') #p_1 and p_2
     dist.append(rDist)
     dist.append(tDist)
     dist = np.asarray(dist).reshape(1,4)
 
     return ret,mtx,tvecs,rMats,dist
 
-def extractPoints(laser_npy,rMats,tvecs,K_inv):
+def extractPoints(laser_npy,rMats,tvecs,K,distCoeff):
+    K_inv = np.linalg.inv(K)
     ext_points = np.array([])
     j = 0
     for i in range(1,len(laser_npy) + 1):
@@ -492,10 +503,13 @@ def extractPoints(laser_npy,rMats,tvecs,K_inv):
         n = RotM[2,:]
         p_0 = tVec
         l_0 = np.array([0,0,0])
-        filename = 'pixcoord_' + str(i) + '.npy'
-        pix_coord = np.load(filename)
+        fname = 'pixcoord_' + str(i) + '.npy'
+        pix_coord = np.load(fname)
+
         for coord in pix_coord:
             if coord[1] != 0:
+                coord = coord.reshape(-2,1,2)
+                coord = cv2.undistortPoints(coord,K,distCoeff).reshape(-1,2)
                 coord = np.append(coord,1)
                 img_coord = K_inv@coord
                 norm_img_coord = img_coord/img_coord[2]
@@ -549,7 +563,7 @@ def getCentroid3D(pointCloud):
     C.append(x_av)
     C.append(y_av)
     C.append(z_av)
-    return C
+    return np.asarray(C)
 
 def getPlaneData(pI,ax,ls = False, svd = False):
     #This function takes the plane parameters and the matplotlib plot object as input 
@@ -576,16 +590,19 @@ def getPlaneData(pI,ax,ls = False, svd = False):
         print('Plane not found')
         return 0
 
-def estimatePlane(P_rand):
+def estimatePlane(points):
     #This function estimates a plane from three points and return the plane parameters
     #if the condition for point to be in the plane is satisfied.
-    p_1 = P_rand[0]
-    p_2 = P_rand[1]
-    p_3 = P_rand[2]
+    p_1 = points[0]
+    p_2 = points[1]
+    p_3 = points[2]
     
     #compute two vectors in the plane
     v1 = p_1 - p_3
     v2 = p_2 - p_3
+    
+    #centroid
+    c = getCentroid3D(points)
 
     #The plane normal is then the cross product of these two vectors, n = [a,b,c]
     n = np.cross(v1,v2)
@@ -611,7 +628,7 @@ def estimatePlane(P_rand):
     np.around(c3,decimals=7) == 0]
 
     if all(conditions):
-        return pI
+        return n,c,d
     else:
         return None
 
@@ -631,14 +648,14 @@ def ransacPlane(pointCloud):
     bestFit = None
     bestRes = np.inf
     centroid = None
-    k = 2000
+    k = 1000
     best_cnt_in = 0
     goal_inlier = 0.8*len(pointCloud)
     while ite < k:
         #sample 3 random points and estimate plane
         maybeIndex = np.random.choice(pointCloud.shape[0],3,replace = False)
         maybeInliers = pointCloud[maybeIndex,:]
-        n,c,d = svd_AxB(homogenify(maybeInliers))
+        n,c,d = estimatePlane(maybeInliers)
 
         #calculate error and inlier threshold
         error_vec,median_error,error_std = getError(pointCloud,n,c,d)
@@ -655,17 +672,16 @@ def ransacPlane(pointCloud):
             if (betterRes < bestRes) and (cnt_in > best_cnt_in):
                 best_cnt_in = cnt_in
                 bestRes = betterRes
-                n /= np.linalg.norm(n)
                 centroid = getCentroid3D(betterData)
                 bestFit = betterFit
                 print("\nIteration {0}".format(ite))
                 print("Inlier count: {0} / {1}".format(best_cnt_in,len(pointCloud)))
-                print ("%f x - %f y - %f = z" % (bestFit[0], bestFit[1], bestFit[2]))
+                print ("%f x + %f y + %f = z" % (bestFit[0], bestFit[1], bestFit[2]))
                 print ("residual:")
                 print(bestRes)
                 
         ite += 1
-    return bestFit,centroid,bestRes
+    return np.squeeze(np.asarray(bestFit)),centroid,bestRes
 
 def homogenify(G):
     H = []
@@ -730,6 +746,13 @@ def lsPlane(pointCloud,print_out = False):
     #error = z_i - z_proj
     error = b - A @ fit
 
+    #planenormal is then
+    v1 = np.array([1,0,fit[0]])
+    v2 = np.array([0,1,fit[1]])
+    
+    n = np.cross(v1,v2)
+    n /= np.linalg.norm(n)
+    
     #Frobenius norm
     residual = np.linalg.norm(error) 
     
@@ -740,9 +763,7 @@ def lsPlane(pointCloud,print_out = False):
         print ("residual:")
         print(residual)
     
-    #reshape fit into ax + by + cz + d     
-    #fit = np.insert(fit,2,1,axis = 0)
-    return fit,residual
+    return np.append(n,fit[2]),residual
 
 #Matrix functions
 #--------------------------------------------------------------------------------------------------------------------------------
