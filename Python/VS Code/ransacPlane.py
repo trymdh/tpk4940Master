@@ -23,12 +23,11 @@ ext_points = np.reshape(ext_points,(-1,3))
 #ext_points = ext_points[2048:]
 #ext_points = ext_points[::100]
 
-#RANSAC---------------------------------------------------------------
+#RANSAC--------------------------------------------------------------
 ransac_fit,c,res = ransacPlane(ext_points)
 
 print(ransac_fit[0:3])
 print(EspenLaser[0:3])
-
 
 def error_checker(plane,point_cloud):
     [A,B,C,D] = plane

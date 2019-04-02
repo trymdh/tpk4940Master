@@ -8,6 +8,7 @@ import os
 import re
 import time
 import random
+import msvcrt
 
 #CAMERA FUNCTIONS
 #-----------------------------------------------------------------------------------------------------------------------------------
@@ -651,6 +652,11 @@ def ransacPlane(pointCloud):
     best_cnt_in = 0
     goal_inlier = 0.8*len(pointCloud)
     while ite < k:
+        if msvcrt.kbhit():
+            k = str(msvcrt.getch()).replace("b'","").replace("'","")
+        if k == 'q':
+            print("Loop exited")
+            break
         #sample 3 random points and estimate plane
         maybeIndex = np.random.choice(pointCloud.shape[0],3,replace = False)
         maybeInliers = pointCloud[maybeIndex,:]
@@ -761,7 +767,6 @@ def lsPlane(pointCloud,print_out = False):
         print ("%f x - %f y - %f = z" % (fit[0], fit[1], fit[2]))
         print ("residual:")
         print(residual)
-    
     return np.append(n,fit[2]),residual
 
 #Matrix functions
@@ -769,14 +774,44 @@ def lsPlane(pointCloud,print_out = False):
 def skew(k):
     return np.array([[0,-k[2],k[1]],[k[2],0,-k[0]],[-k[1],k[0],0]])
 
+def unskew(SS):
+    """
+    This function takes in a skew symmetrix matrix and returns
+    it on vector form.
+    """
+    x = SS[2,1]
+    y = SS[0,2]
+    z = SS[1,0]
+    return np.array([[x,y,z]]).T
+
+def logMatrix(R):
+    """
+    A = |R(theta) t(x,y,z)|
+        |   0        1    |
+    when |theta| < pi:
+        tr(R) = 1 + 2*cos(theta)
+    ----------------------------------------
+    log A = (R-R.T)*(theta/2*sin(theta))
+    """
+    theta = np.arccos((np.trace(R)-1)/2)
+    #print(np.linalg.norm(theta) < np.pi)
+    
+    log_A_skewsym = (R-R.T)*theta/(2*np.sin(theta))
+    log_A = unskew(log_A_skewsym)
+    return log_A
 
 
+#hand-eye calibration:
 
+def handEye(M):
+    #A and B a list of matrixes, i.e M = [(A_1,B_1),(A_2,B_2)...,(A_n,B_n)]
+    for n in range(0,len(M)):
+        A_i = A[n][0]
+        R_iA = A_i[0:3,0:3];t_iA = A_i[0:3,3]
+        B_i = B[n][1]
+        R_iB = B_i[0:3,0:3];t_iB = B_i[0:3,3]
 
-
-
-
-
+    return X
 
 
 
