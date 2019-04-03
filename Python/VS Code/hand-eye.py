@@ -113,10 +113,6 @@ alpha_2 = logMatrix(R_2A)
 beta_1 = logMatrix(R_1B)
 beta_2 = logMatrix(R_2B)
 
-alpha_1 = np.around(alpha_1)
-beta_1 = np.around(beta_1,decimals=4)
-alpha_2 = np.around(alpha_2,decimals=1)
-beta_2 = np.around(beta_2,decimals=4)
 
 AA = np.eye(3)
 AA[0:3,0] = alpha_1.ravel()
@@ -142,3 +138,4 @@ X = np.eye(4)
 X[0:3,0:3] = R_x
 X[0:3,3] = t_x.ravel()
 
+print(X)

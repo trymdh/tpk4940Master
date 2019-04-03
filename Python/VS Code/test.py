@@ -25,6 +25,7 @@ B_2 = np.array([
     [0.000000,0.000000,0.000000,1.000000]
     ])
 
+
 A = [(A_1,B_1),(A_2,B_2)]
 alpha_i = []
 beta_i = []
@@ -39,13 +40,12 @@ for n in range(0,len(A)):
 alpha_i = np.asarray(alpha_i)
 beta_i = np.asarray(beta_i)
 
-
 M = np.zeros((3,3))
 for i, a in enumerate(alpha_i):
     b = beta_i[i]
     M += M + b@a.T
 
+print(np.linalg.det(M))
+M_eig,nor_eig = np.linalg.eig(M.T@M)
 
-R_x = np.sqrt(M.T@M)@M.T
-print(R_x)
 
