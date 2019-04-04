@@ -7,12 +7,17 @@ from AT_cx_functions import*
 
 #load all the calibration parameters
 ret,K,tvecs,rMats,dist = loadCaliParam()
+
+#Old images
 #os.chdir('C:/Users/Trym/OneDrive/Master/VS Code/laserimage') #home pc
 #os.chdir('C:/Users/trymdh.WIN-NTNU-NO/OneDrive/Master/VS Code/laserimage') #work pc
-#os.chdir('C:/Users/TrymAsus/OneDrive/Master/VS Code/laserimage')#LAPTOP
+#os.chdir('C:/Users/TrymAsus/OneDrive/Master/VS Code/laserimage') #LAPTOP
 
-os.chdir('C:/Users/trymdh.WIN-NTNU-NO/OneDrive/tpk4940Master/Espen Code/LaserAndNpys')
-EspenLaser = np.load('C:/Users/trymdh.WIN-NTNU-NO/OneDrive/tpk4940Master/Espen Code/laserplane.npy')
+#New
+os.chdir('C:/Users/Trym/OneDrive/tpk4940Master/Espen Code/LaserAndNpys') #home pc
+#os.chdir('C:/Users/trymdh.WIN-NTNU-NO/OneDrive/tpk4940Master/Espen Code/LaserAndNpys')
+#os.chdir('C:/Users/TrymAsus/OneDrive/Master/tpk4940Master/Espen Code/LaserAndNpys') #LAPTOP
+EspenLaser = np.load('C:/Users/Trym/OneDrive/tpk4940Master/Espen Code/laserplane.npy')
 
 laser_npy = os.getcwd().replace("\\","/") + "/*.npy"
 laser_npy = sortList(glob.glob(laser_npy))
@@ -26,8 +31,6 @@ ext_points = np.reshape(ext_points,(-1,3))
 #RANSAC--------------------------------------------------------------
 ransac_fit,c,res = ransacPlane(ext_points)
 
-print(ransac_fit[0:3])
-print(EspenLaser[0:3])
 
 def error_checker(plane,point_cloud):
     [A,B,C,D] = plane
@@ -48,6 +51,9 @@ def planeify(vector_plane): #Assumes form [nx,ny,nz,cx,cy,cz]
 EspenPlan,EspenPlan_s = planeify(EspenLaser)
 espenError = error_checker(EspenPlan,ext_points)
 ransacError = error_checker(ransac_fit[0:4],ext_points)
+
+print(EspenPlan)
+print(ransac_fit)
 
 print("EspenError: {0}".format(espenError))
 print("RansacError: {0}".format(ransacError))

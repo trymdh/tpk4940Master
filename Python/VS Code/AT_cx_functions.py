@@ -464,7 +464,9 @@ def loadCaliParam():
     #caliParam_folder = "C:/Users/TrymAsus/OneDrive/tpk4940Master/Matlab" #LAPTOP
     
     #New calibration files:
-    caliParam_folder = "C:/Users/trymdh.WIN-NTNU-NO/OneDrive/tpk4940Master/Espen Code/Matlab"
+    #caliParam_folder = "C:/Users/trymdh.WIN-NTNU-NO/OneDrive/tpk4940Master/Espen Code/Matlab"
+    #caliParam_folder = "C:/Users/TrymAsus/OneDrive/tpk4940Master/Espen Code/Matlab" #LAPTOP
+    caliParam_folder = "C:/Users/Trym/OneDrive/tpk4940Master/Espen Code/Matlab" # home pc
     os.chdir(caliParam_folder)
 
     #Mean Reprojection Error
@@ -593,16 +595,13 @@ def getPlaneData(pI,ax,ls = False, svd = False):
 def estimatePlane(points):
     #This function estimates a plane from three points and return the plane parameters
     #if the condition for point to be in the plane is satisfied.
-    p_1 = points[0]
-    p_2 = points[1]
-    p_3 = points[2]
+    p_1 = points[0]; p_2 = points[1]; p_3 = points[2]
     
     #compute two vectors in the plane
-    v1 = p_1 - p_3
-    v2 = p_2 - p_3
+    v1 = p_1 - p_3; v2 = p_2 - p_3
     
     #centroid
-    c = getCentroid3D(points)
+    cent = getCentroid3D(points)
 
     #The plane normal is then the cross product of these two vectors, n = [a,b,c]
     n = np.cross(v1,v2)
@@ -613,31 +612,34 @@ def estimatePlane(points):
     #Plane, pI = [n,d] = [a,b,c,d]
     pI = np.append(n,d)
     
-    #Criteria for a point to be in the plane is x_h . Pi ~ 0 is satisfied.
     #p_h = [x,y,z,1]
-    p_1_h = np.append(p_1,1)
-    p_2_h = np.append(p_2,1)
-    p_3_h = np.append(p_3,1)
+    p_1_h = np.append(p_1,1); p_2_h = np.append(p_2,1); p_3_h = np.append(p_3,1)
     
-    c1 = np.dot(p_1_h,pI)
-    c2 = np.dot(p_2_h,pI)
-    c3 = np.dot(p_3_h,pI)
+    #Criteria for a point to be in the plane is x_h . Pi ~ 0 is satisfied.
+    cri1 = np.dot(p_1_h,pI); cri2 = np.dot(p_2_h,pI); cri3 = np.dot(p_3_h,pI)
     
-    conditions = [np.around(c1,decimals=7) == 0,
-    np.around(c3,decimals=7) == 0,
-    np.around(c3,decimals=7) == 0]
+    conditions = [np.around(cri1,decimals=7) == 0,np.around(cri3,decimals=7) == 0,np.around(cri3,decimals=7) == 0]
 
     if all(conditions):
-        return n,c,d
+        return n,cent,d
     else:
         return None
 
-def getError(pointCloud,n,c,d):
+def error_checker(plane,point_cloud):
+    [A,B,C,D] = plane
+    distances = np.array([])
+    for i in range(len(point_cloud[:,0])):
+        [x,y,z] = [point_cloud[i,0],point_cloud[i,1],point_cloud[i,2]] 
+        d = abs(A*x + B*y + C*z + D)/np.sqrt(A**2 + B**2 + C**2)
+        distances = np.append(distances,d)
+    return sum(distances)/len(distances)
+
+def getError(pointCloud,n,cent,d):
     error = 0
     error_list = []
     for point in pointCloud:
         point_h = np.append(point,1)
-        error_list.append(np.dot((point - c),n))
+        error_list.append(np.dot((point - cent),n))
     error_vec = np.array(error_list)
     median_error = np.median(error_list)
     error_std = np.std(error_list)
@@ -646,11 +648,11 @@ def getError(pointCloud,n,c,d):
 def ransacPlane(pointCloud):
     ite = 0
     bestFit = None
-    bestRes = np.inf
+    bestErr = np.inf
     centroid = None
     k = 1000
     best_cnt_in = 0
-    goal_inlier = 0.8*len(pointCloud)
+    goal_inlier = 0.5*len(pointCloud)
     while ite < k:
         if msvcrt.kbhit():
             k = str(msvcrt.getch()).replace("b'","").replace("'","")
@@ -660,10 +662,10 @@ def ransacPlane(pointCloud):
         #sample 3 random points and estimate plane
         maybeIndex = np.random.choice(pointCloud.shape[0],3,replace = False)
         maybeInliers = pointCloud[maybeIndex,:]
-        n,c,d = estimatePlane(maybeInliers)
+        n,cent,d = estimatePlane(maybeInliers)
 
         #calculate error and inlier threshold
-        error_vec,median_error,error_std = getError(pointCloud,n,c,d)
+        error_vec,median_error,error_std = getError(pointCloud,n,cent,d)
         
         #count inliers
         alsoInliers = countInliers(error_vec, median_error,error_std,pointCloud)
@@ -673,20 +675,21 @@ def ransacPlane(pointCloud):
             betterData = alsoInliers
             #The new dataset contains few outliers => use LS to estimate plane
             betterFit,betterRes = lsPlane(betterData)
+            error = error_checker(betterFit,pointCloud)
 
-            if (betterRes < bestRes) and (cnt_in > best_cnt_in):
+            if (error < bestErr) and (cnt_in > best_cnt_in):
                 best_cnt_in = cnt_in
-                bestRes = betterRes
+                bestErr = error
                 centroid = getCentroid3D(betterData)
                 bestFit = betterFit
                 print("\nIteration {0}".format(ite))
                 print("Inlier count: {0} / {1}".format(best_cnt_in,len(pointCloud)))
                 print ("%f x + %f y + %f = z" % (bestFit[0], bestFit[1], bestFit[2]))
-                print ("residual:")
-                print(bestRes)
+                print ("Error:")
+                print(bestErr)
                 
         ite += 1
-    return np.squeeze(np.asarray(bestFit)),centroid,bestRes
+    return np.squeeze(np.asarray(bestFit)),centroid,bestErr
 
 def homogenify(G):
     H = []
@@ -803,7 +806,8 @@ def logMatrix(R):
 
 #hand-eye calibration:
 def handEye(A,B):
-    
+    #Solving AX = BX
+    #based on MATLAB code in Olav Vision Notes
     n = len(A)
     Ka = np.zeros((3,n)); Kb = np.zeros((3,n))
     for i in range(0,n):
@@ -815,9 +819,6 @@ def handEye(A,B):
     v = vh.conj().T
 
     R = v@u.T
-    
-    #should be zero
-    #print(np.linalg.norm(R-X[0:3,0:3]))
     
     C = []; d = []
     for i in range(0,n):
@@ -831,11 +832,7 @@ def handEye(A,B):
     t2 = C.T@d
     t = t1@t2
 
-    X_est = np.eye(4)
-    X_est[0:3,0:3] = R ; X_est[0:3,3] = t.ravel()
+    X = np.eye(4)
+    X[0:3,0:3] = R ; X[0:3,3] = t.ravel()
     
-    #should be zero
-    #print(np.linalg.norm(X_est-X))
-
-    return X_est
-
+    return X
