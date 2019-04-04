@@ -113,7 +113,6 @@ alpha_2 = logMatrix(R_2A)
 beta_1 = logMatrix(R_1B)
 beta_2 = logMatrix(R_2B)
 
-
 AA = np.eye(3)
 AA[0:3,0] = alpha_1.ravel()
 AA[0:3,1] = alpha_2.ravel()
@@ -130,7 +129,7 @@ R_x = AA@BB_inv
 C = np.vstack(([R_1A - np.eye(len(R_1A))],[R_2A - np.eye(len(R_2A))])).reshape(6,3)
 d = np.vstack([[R_x@t_1B - t_1A],[R_x@t_2B - t_2A]]).reshape(1,6)
 
-#Uknown transaltion
+#Uknown translation
 t_x = np.linalg.inv(C.T@C)@C.T@d.T
 
 #Solution
@@ -139,3 +138,8 @@ X[0:3,0:3] = R_x
 X[0:3,3] = t_x.ravel()
 
 print(X)
+A = [A_1,A_2]
+B = [B_1,B_2]
+X_est = handEye(A,B)
+print(X_est)
+print(np.linalg.norm(X_est-X))

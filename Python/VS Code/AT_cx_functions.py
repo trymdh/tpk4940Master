@@ -802,20 +802,40 @@ def logMatrix(R):
 
 
 #hand-eye calibration:
-
-def handEye(M):
-    #A and B a list of matrixes, i.e M = [(A_1,B_1),(A_2,B_2)...,(A_n,B_n)]
-    for n in range(0,len(M)):
-        A_i = A[n][0]
-        R_iA = A_i[0:3,0:3];t_iA = A_i[0:3,3]
-        B_i = B[n][1]
-        R_iB = B_i[0:3,0:3];t_iB = B_i[0:3,3]
-
-    return X
-
-
-
-
-        
+def handEye(A,B):
     
+    n = len(A)
+    Ka = np.zeros((3,n)); Kb = np.zeros((3,n))
+    for i in range(0,n):
+        Ka[:,i] = logMatrix(A[i][0:3,0:3]).ravel()
+        Kb[:,i] = logMatrix(B[i][0:3,0:3]).ravel()
+        
+    H = Kb@Ka.T
+    u,s,vh = np.linalg.svd(H)
+    v = vh.conj().T
+
+    R = v@u.T
+    
+    #should be zero
+    #print(np.linalg.norm(R-X[0:3,0:3]))
+    
+    C = []; d = []
+    for i in range(0,n):
+        C.append(A[i][0:3,0:3] - np.eye(3))
+        d.append(R@B[i][0:3,3] - A[i][0:3,3])
+
+    C = np.asarray(C).reshape(3*n,3)
+    d = np.asarray(d).reshape(3*n,1)
+
+    t1 = np.linalg.inv(C.T@C)
+    t2 = C.T@d
+    t = t1@t2
+
+    X_est = np.eye(4)
+    X_est[0:3,0:3] = R ; X_est[0:3,3] = t.ravel()
+    
+    #should be zero
+    #print(np.linalg.norm(X_est-X))
+
+    return X_est
 
