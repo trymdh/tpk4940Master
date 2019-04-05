@@ -483,6 +483,7 @@ def loadCaliParam():
     C = int(shp[0]/3)
     rMats = rMats.reshape(C,3,3)
     
+    
     #Radial and tangential distortion coeffecients, dist = [k_1,k_2,p_1,p_2[,k_3[,k_4,k_5,k_6]]]
     dist = []
     rDist = np.loadtxt('./CalibrationConstants/calibratedRaddist.txt') #k_1 and k_2, => k_3 = 0, this leads to dist = [k_1,k_2,p_1,p_2]
@@ -600,28 +601,21 @@ def estimatePlane(points):
     #This function estimates a plane from three points and return the plane parameters
     #if the condition for point to be in the plane is satisfied.
     p_1 = points[0]; p_2 = points[1]; p_3 = points[2]
-    
     #compute two vectors in the plane
     v1 = p_1 - p_3; v2 = p_2 - p_3
-    
     #centroid
     cent = getCentroid3D(points)
-
     #The plane normal is then the cross product of these two vectors, n = [a,b,c]
     n = np.cross(v1,v2)
-    
     #distance from the plane to the origin
     d = -np.dot(p_3,np.cross(p_1,p_2))
-    
     #Plane, pI = [n,d] = [a,b,c,d]
     pI = np.append(n,d)
-    
     #p_h = [x,y,z,1]
     p_1_h = np.append(p_1,1); p_2_h = np.append(p_2,1); p_3_h = np.append(p_3,1)
-    
     #Criteria for a point to be in the plane is x_h . Pi ~ 0 is satisfied.
     cri1 = np.dot(p_1_h,pI); cri2 = np.dot(p_2_h,pI); cri3 = np.dot(p_3_h,pI)
-    
+
     conditions = [np.around(cri1,decimals=7) == 0,np.around(cri3,decimals=7) == 0,np.around(cri3,decimals=7) == 0]
 
     if all(conditions):
@@ -659,15 +653,14 @@ def ransacPlane(pointCloud):
     goal_inlier = 0.5*len(pointCloud)
     while ite < k:
         if msvcrt.kbhit():
-            k = str(msvcrt.getch()).replace("b'","").replace("'","")
-        if k == 'q':
-            print("Loop exited")
-            break
+            key = str(msvcrt.getch()).replace("b'","").replace("'","")
+            if key == 'q':
+                print("Loop exited")
+                break
         #sample 3 random points and estimate plane
         maybeIndex = np.random.choice(pointCloud.shape[0],3,replace = False)
         maybeInliers = pointCloud[maybeIndex,:]
-        n,cent,d = estimatePlane(maybeInliers)
-
+        n,cent,d = svd_AxB(homogenify(maybeInliers))
         #calculate error and inlier threshold
         error_vec,median_error,error_std = getError(pointCloud,n,cent,d)
         
@@ -678,17 +671,19 @@ def ransacPlane(pointCloud):
         if cnt_in >= goal_inlier:
             betterData = alsoInliers
             #The new dataset contains few outliers => use LS to estimate plane
-            betterFit,betterRes = lsPlane(betterData)
+            #betterFit,betterRes = lsPlane(betterData)
+            n,c,d = svd_AxB(homogenify(betterData))
+            betterFit = np.append(n,d)
             error = error_checker(betterFit,pointCloud)
 
-            if (error < bestErr) and (cnt_in > best_cnt_in):
+            if (cnt_in >= best_cnt_in) and (error < bestErr):
                 best_cnt_in = cnt_in
                 bestErr = error
-                centroid = getCentroid3D(betterData)
+                centroid = c
                 bestFit = betterFit
                 print("\nIteration {0}".format(ite))
                 print("Inlier count: {0} / {1}".format(best_cnt_in,len(pointCloud)))
-                print ("%f x + %f y + %f = z" % (bestFit[0], bestFit[1], bestFit[2]))
+                print ("{0}x + {1}y + {2}z + {3}".format(bestFit[0], bestFit[1], bestFit[2],bestFit[3]))
                 print ("Error:")
                 print(bestErr)
                 
@@ -709,6 +704,7 @@ def svd_AxB(pointCloud):
     c = getCentroid3D(pointCloud)
     n = x[0:3]
     d = x[3]
+    #n is not normalized
     return n,c,d
 
 def countInliers(error_vec, median_error,error_std,pointCloud):

@@ -27,12 +27,12 @@ ret,K,tvecs,rMats,dist = loadCaliParam()
 
 #Old images
 #os.chdir('C:/Users/Trym/OneDrive/Master/VS Code/laserimage') #home pc
-#os.chdir('C:/Users/trymdh.WIN-NTNU-NO/OneDrive/Master/VS Code/laserimage') #work pc
+os.chdir('C:/Users/trymdh.WIN-NTNU-NO/OneDrive/Master/VS Code/laserimage') #work pc
 #os.chdir('C:/Users/TrymAsus/OneDrive/Master/VS Code/laserimage') #LAPTOP
 
 #New
 #os.chdir('C:/Users/Trym/OneDrive/tpk4940Master/Espen Code/LaserAndNpys') #home pc
-os.chdir('C:/Users/trymdh.WIN-NTNU-NO/OneDrive/tpk4940Master/Espen Code/LaserAndNpys') #work pc
+#os.chdir('C:/Users/trymdh.WIN-NTNU-NO/OneDrive/tpk4940Master/Espen Code/LaserAndNpys') #work pc
 #os.chdir('C:/Users/TrymAsus/OneDrive/Master/tpk4940Master/Espen Code/LaserAndNpys') #LAPTOP
 EspenLaser = np.load('C:/Users/trymdh.WIN-NTNU-NO/OneDrive/tpk4940Master/Espen Code/laserplane.npy')
 print(EspenLaser)
@@ -48,6 +48,7 @@ ext_points = np.reshape(ext_points,(-1,3))
 #RANSAC--------------------------------------------------------------
 ransac_fit,c,res = ransacPlane(ext_points)
 
+"""
 EspenPlan,EspenPlan_s = planeify(EspenLaser)
 espenError = error_checker(EspenPlan,ext_points)
 ransacError = error_checker(ransac_fit[0:4],ext_points)
@@ -57,3 +58,4 @@ np.save('RansacPlane.npy',RANSACPLANE)
 
 print("EspenError: {0}".format(espenError))
 print("RansacError: {0}".format(ransacError))
+"""
