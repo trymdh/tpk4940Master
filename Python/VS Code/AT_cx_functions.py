@@ -464,16 +464,17 @@ def loadCaliParam():
     #caliParam_folder = "C:/Users/TrymAsus/OneDrive/tpk4940Master/Matlab" #LAPTOP
     
     #New calibration files:
-    #caliParam_folder = "C:/Users/trymdh.WIN-NTNU-NO/OneDrive/tpk4940Master/Espen Code/Matlab"
+    caliParam_folder = "C:/Users/trymdh.WIN-NTNU-NO/OneDrive/tpk4940Master/Espen Code/Matlab"
     #caliParam_folder = "C:/Users/TrymAsus/OneDrive/tpk4940Master/Espen Code/Matlab" #LAPTOP
-    caliParam_folder = "C:/Users/Trym/OneDrive/tpk4940Master/Espen Code/Matlab" # home pc
+    #caliParam_folder = "C:/Users/Trym/OneDrive/tpk4940Master/Espen Code/Matlab" # home pc
     os.chdir(caliParam_folder)
 
     #Mean Reprojection Error
     ret = np.loadtxt('MeanReprojectionError.txt')
    
     #The Intrisinc Matrix
-    mtx = np.loadtxt('./CalibrationConstants/calibratedCameraMatrix.txt')
+    #mtx = np.loadtxt('IntrinsicMatrix.txt') #Old
+    mtx = np.loadtxt('./CalibrationConstants/calibratedCameraMatrix.txt') #New
     
     #Rotation Matrices and translation vectors between the scene and the camera
     tvecs = np.loadtxt('TranslationVectors.txt')
@@ -482,10 +483,14 @@ def loadCaliParam():
     C = int(shp[0]/3)
     rMats = rMats.reshape(C,3,3)
     
+    
     #Radial and tangential distortion coeffecients, dist = [k_1,k_2,p_1,p_2[,k_3[,k_4,k_5,k_6]]]
     dist = []
     rDist = np.loadtxt('./CalibrationConstants/calibratedRaddist.txt') #k_1 and k_2, => k_3 = 0, this leads to dist = [k_1,k_2,p_1,p_2]
+    #rDist = np.loadtxt('RadialDistortion.txt')
     tDist = np.loadtxt('./CalibrationConstants/calibratedTangdist.txt') #p_1 and p_2
+    #tDist = np.loadtxt('TangentialDistortion.txt') #p_1 and p_2
+    
     dist.append(rDist)
     dist.append(tDist)
     dist = np.asarray(dist).reshape(1,4)
@@ -596,28 +601,21 @@ def estimatePlane(points):
     #This function estimates a plane from three points and return the plane parameters
     #if the condition for point to be in the plane is satisfied.
     p_1 = points[0]; p_2 = points[1]; p_3 = points[2]
-    
     #compute two vectors in the plane
     v1 = p_1 - p_3; v2 = p_2 - p_3
-    
     #centroid
     cent = getCentroid3D(points)
-
     #The plane normal is then the cross product of these two vectors, n = [a,b,c]
     n = np.cross(v1,v2)
-    
     #distance from the plane to the origin
     d = -np.dot(p_3,np.cross(p_1,p_2))
-    
     #Plane, pI = [n,d] = [a,b,c,d]
     pI = np.append(n,d)
-    
     #p_h = [x,y,z,1]
     p_1_h = np.append(p_1,1); p_2_h = np.append(p_2,1); p_3_h = np.append(p_3,1)
-    
     #Criteria for a point to be in the plane is x_h . Pi ~ 0 is satisfied.
     cri1 = np.dot(p_1_h,pI); cri2 = np.dot(p_2_h,pI); cri3 = np.dot(p_3_h,pI)
-    
+
     conditions = [np.around(cri1,decimals=7) == 0,np.around(cri3,decimals=7) == 0,np.around(cri3,decimals=7) == 0]
 
     if all(conditions):
@@ -655,15 +653,14 @@ def ransacPlane(pointCloud):
     goal_inlier = 0.5*len(pointCloud)
     while ite < k:
         if msvcrt.kbhit():
-            k = str(msvcrt.getch()).replace("b'","").replace("'","")
-        if k == 'q':
-            print("Loop exited")
-            break
+            key = str(msvcrt.getch()).replace("b'","").replace("'","")
+            if key == 'q':
+                print("Loop exited")
+                break
         #sample 3 random points and estimate plane
         maybeIndex = np.random.choice(pointCloud.shape[0],3,replace = False)
         maybeInliers = pointCloud[maybeIndex,:]
-        n,cent,d = estimatePlane(maybeInliers)
-
+        n,cent,d = svd_AxB(homogenify(maybeInliers))
         #calculate error and inlier threshold
         error_vec,median_error,error_std = getError(pointCloud,n,cent,d)
         
@@ -674,17 +671,19 @@ def ransacPlane(pointCloud):
         if cnt_in >= goal_inlier:
             betterData = alsoInliers
             #The new dataset contains few outliers => use LS to estimate plane
-            betterFit,betterRes = lsPlane(betterData)
+            #betterFit,betterRes = lsPlane(betterData)
+            n,c,d = svd_AxB(homogenify(betterData))
+            betterFit = np.append(n,d)
             error = error_checker(betterFit,pointCloud)
 
-            if (error < bestErr) and (cnt_in > best_cnt_in):
+            if (cnt_in >= best_cnt_in) and (error < bestErr):
                 best_cnt_in = cnt_in
                 bestErr = error
-                centroid = getCentroid3D(betterData)
-                bestFit = betterFit
-                print("\nIteration {0}".format(ite))
+                centroid = c
+                bestFit = -betterFit
+                print("\nIteration {0}".format(ite + 1))
                 print("Inlier count: {0} / {1}".format(best_cnt_in,len(pointCloud)))
-                print ("%f x + %f y + %f = z" % (bestFit[0], bestFit[1], bestFit[2]))
+                print ("{0}x + {1}y + {2}z + {3}".format(bestFit[0], bestFit[1], bestFit[2],bestFit[3]))
                 print ("Error:")
                 print(bestErr)
                 
@@ -705,6 +704,7 @@ def svd_AxB(pointCloud):
     c = getCentroid3D(pointCloud)
     n = x[0:3]
     d = x[3]
+    #n is not normalized
     return n,c,d
 
 def countInliers(error_vec, median_error,error_std,pointCloud):
@@ -806,7 +806,28 @@ def logMatrix(R):
 
 #hand-eye calibration:
 def handEye(A,B):
-    #Solving AX = BX
+    """
+    Set of transforms between the work space and the robot end effector:
+    A = [A1,A2,..,An]
+    Set of transforms between between work space and camera frame:
+    B = [B1,B2,...,Bn]
+
+    One pair of A and B where q_1a != q_1b
+    A1a = T_OE_1a #Pose at joint vector q_1a
+    A1b = T_OE_1b #Pose at joint vector q_1b
+    B1a = T_CW_1a #Pose at joint vector q_1a
+    B1b = T_CW_1b #Pose at joint vector q_1b
+    -> A1 = (A1b)^(-1)@A1a
+    -> B1 = B1b@(B1a)^(-1)
+    Then the basic hand-eye equation for ONE pair of different poses is:
+    A1@X = X@B1
+    To find X we need n >= 2 different pair of poses
+    A1@X = X@B1
+    A2@X = X@B2
+        .....
+    An@X = X@B_n
+    """
+    #Solving AX = BX, need n >= 2 pairs of transforms, i.e len(A) = len(B) >= 2
     #based on MATLAB code in Olav Vision Notes
     n = len(A)
     Ka = np.zeros((3,n)); Kb = np.zeros((3,n))
@@ -819,7 +840,6 @@ def handEye(A,B):
     v = vh.conj().T
 
     R = v@u.T
-    
     C = []; d = []
     for i in range(0,n):
         C.append(A[i][0:3,0:3] - np.eye(3))

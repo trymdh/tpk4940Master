@@ -143,5 +143,3 @@ B = [B_1,B_2]
 X_est = handEye(A,B)
 print(X_est)
 print(np.linalg.norm(X_est-X))
-
-print(X[0:3,0:3]@B_1[0:3,0:3]@np.linalg.inv(X[0:3,0:3]))

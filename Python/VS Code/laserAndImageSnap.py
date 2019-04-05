@@ -12,7 +12,7 @@ hDev = getDevice()
 cogConfig(hDev)
 
 wd = getCurrentWD()
-laserimage_folder = wd + "/laserimage"
+laserimage_folder = wd + "/Newlaserimage"
 if not os.path.exists(laserimage_folder): 
     os.makedirs(laserimage_folder) 
 os.chdir(laserimage_folder) 
@@ -31,7 +31,7 @@ num_img = len(laserImageList)
 img_thresh = 20 #number of images needed for a good calibration, n < 20
 
 if laserPixelList == []:
-    save_name = wd + "/laserimage/pixcoord_1.npy"
+    save_name = laserimage_folder + "/pixcoord_1.npy"
     np.save(save_name,laserpixel)
 else:
     n = len(laserPixelList) + 1
