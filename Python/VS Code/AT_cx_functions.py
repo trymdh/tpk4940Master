@@ -680,8 +680,8 @@ def ransacPlane(pointCloud):
                 best_cnt_in = cnt_in
                 bestErr = error
                 centroid = c
-                bestFit = betterFit
-                print("\nIteration {0}".format(ite))
+                bestFit = -betterFit
+                print("\nIteration {0}".format(ite + 1))
                 print("Inlier count: {0} / {1}".format(best_cnt_in,len(pointCloud)))
                 print ("{0}x + {1}y + {2}z + {3}".format(bestFit[0], bestFit[1], bestFit[2],bestFit[3]))
                 print ("Error:")
@@ -807,7 +807,7 @@ def logMatrix(R):
 #hand-eye calibration:
 def handEye(A,B):
     """
-    Set of transforms between the world origin and the robot end effector:
+    Set of transforms between the work space and the robot end effector:
     A = [A1,A2,..,An]
     Set of transforms between between work space and camera frame:
     B = [B1,B2,...,Bn]

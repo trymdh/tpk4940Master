@@ -9,7 +9,7 @@ import os
 #Funksjonen tar inn Rotasjonsmatrise, tVec, K-matrise, distortionkoeffs (tas ikke høyde for per nå) i tillegg til enten directorien til 
 #pikselcoord, eller hele preloaded pixelkoords.
 #Funksjonen returnerer en array med XYZ-koordinater 
-os.chdir('C:/Users/Trym/OneDrive/Master/VS Code/laserimage')
+os.chdir('C:/Users/TrymAsus/OneDrive/Master/VS Code/laserimage')
 pix = np.load('pixcoord_4.npy')
 
 #RotM and tVec is directly read from Matlab, corresponding to the 4th image
