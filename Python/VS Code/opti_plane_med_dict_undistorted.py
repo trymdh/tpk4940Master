@@ -72,7 +72,7 @@ def loadCaliParam():
     obtained from Matlab into numpy arrays
     """
     #path to the folder where the parameters are saved
-    caliParam_folder = "C:/Users/trymdh.WIN-NTNU-NO/OneDrive/tpk4940Master/Espen Code/Matlab" #work pc
+    caliParam_folder = "C:/Users/Trym/OneDrive/tpk4940Master/Espen Code/Matlab" #work pc
     #caliParam_folder = "C:/Users/sioux/OneDrive/Master/Laserplankalibrering/Bilder_og_koordinater/Matlab" # home pc
     os.chdir(caliParam_folder)
 
@@ -111,7 +111,7 @@ def loadCaliParam():
 ret,rets,K,tvecs,rMats,dist,rotVecError,transVecError = loadCaliParam()
 
 K_inv = np.linalg.inv(K)
-os.chdir('C:/Users/trymdh.WIN-NTNU-NO/OneDrive/tpk4940Master/Espen Code/LaserAndNpys') #LAPTOP
+os.chdir('C:/Users/Trym/OneDrive/tpk4940Master/Espen Code/LaserAndNpys') #LAPTOP
 laser_npy = os.getcwd().replace("\\","/") + "/*.npy"
 laser_npy = glob.glob(laser_npy)
 number_of_laserfiles = len(laser_npy)
@@ -270,11 +270,13 @@ raw = [23030113428831100,70634739100933070, 5609153211116791, 137097995912371100
 plane_QP = p/np.linalg.norm(plane_QP)
 error_QP = error_checker(plane_QP,ext_points)
 
-ransac_fit,c,res = ransacPlane(ext_points)
 
-print("Normalisert QP plan:{0}\nRansac Plan: {1}".format(p/np.linalg.norm(p),ransac_fit))
-RANSACPLANE = np.append(ransac_fit[0:3]/np.linalg.norm(ransac_fit[0:3]),c)
-RANSACPLANE,rS = planeify(RANSACPLANE) 
+#vet ikke hvorfor men det ser ut som dersom jeg ganger "d" koeffisientenen i QP plane med ransacen så
+#ordner det seg!?
+ransac_fit,c,res = ransacPlane(ext_points)
+RANSACPLANE = np.append(ransac_fit[0:3],c)
+[RANSACPLANE,rS] = planeify(RANSACPLANE) 
+print("QP plan:{0}\nRansac Plan: {1}".format(p,RANSACPLANE*1.p[3]))
 ransac_error = error_checker(RANSACPLANE,ext_points)
 print("Espen_QP error:{0}\nRansac error: {1}".format(error_QP,ransac_error))
 #print("Tot plane-normal error LS :",error_LS," ", "Tot plane-normal error QP :", error_QP)
