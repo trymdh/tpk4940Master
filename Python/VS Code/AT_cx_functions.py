@@ -464,16 +464,17 @@ def loadCaliParam():
     #caliParam_folder = "C:/Users/TrymAsus/OneDrive/tpk4940Master/Matlab" #LAPTOP
     
     #New calibration files:
-    #caliParam_folder = "C:/Users/trymdh.WIN-NTNU-NO/OneDrive/tpk4940Master/Espen Code/Matlab"
+    caliParam_folder = "C:/Users/trymdh.WIN-NTNU-NO/OneDrive/tpk4940Master/Espen Code/Matlab"
     #caliParam_folder = "C:/Users/TrymAsus/OneDrive/tpk4940Master/Espen Code/Matlab" #LAPTOP
-    caliParam_folder = "C:/Users/Trym/OneDrive/tpk4940Master/Espen Code/Matlab" # home pc
+    #caliParam_folder = "C:/Users/Trym/OneDrive/tpk4940Master/Espen Code/Matlab" # home pc
     os.chdir(caliParam_folder)
 
     #Mean Reprojection Error
     ret = np.loadtxt('MeanReprojectionError.txt')
    
     #The Intrisinc Matrix
-    mtx = np.loadtxt('./CalibrationConstants/calibratedCameraMatrix.txt')
+    #mtx = np.loadtxt('IntrinsicMatrix.txt') #Old
+    mtx = np.loadtxt('./CalibrationConstants/calibratedCameraMatrix.txt') #New
     
     #Rotation Matrices and translation vectors between the scene and the camera
     tvecs = np.loadtxt('TranslationVectors.txt')
@@ -485,7 +486,10 @@ def loadCaliParam():
     #Radial and tangential distortion coeffecients, dist = [k_1,k_2,p_1,p_2[,k_3[,k_4,k_5,k_6]]]
     dist = []
     rDist = np.loadtxt('./CalibrationConstants/calibratedRaddist.txt') #k_1 and k_2, => k_3 = 0, this leads to dist = [k_1,k_2,p_1,p_2]
+    #rDist = np.loadtxt('RadialDistortion.txt')
     tDist = np.loadtxt('./CalibrationConstants/calibratedTangdist.txt') #p_1 and p_2
+    #tDist = np.loadtxt('TangentialDistortion.txt') #p_1 and p_2
+    
     dist.append(rDist)
     dist.append(tDist)
     dist = np.asarray(dist).reshape(1,4)
@@ -806,7 +810,28 @@ def logMatrix(R):
 
 #hand-eye calibration:
 def handEye(A,B):
-    #Solving AX = BX
+    """
+    Set of transforms between the world origin and the robot end effector:
+    A = [A1,A2,..,An]
+    Set of transforms between between work space and camera frame:
+    B = [B1,B2,...,Bn]
+
+    One pair of A and B where q_1a != q_1b
+    A1a = T_OE_1a #Pose at joint vector q_1a
+    A1b = T_OE_1b #Pose at joint vector q_1b
+    B1a = T_CW_1a #Pose at joint vector q_1a
+    B1b = T_CW_1b #Pose at joint vector q_1b
+    -> A1 = (A1b)^(-1)@A1a
+    -> B1 = B1b@(B1a)^(-1)
+    Then the basic hand-eye equation for ONE pair of different poses is:
+    A1@X = X@B1
+    To find X we need n >= 2 different pair of poses
+    A1@X = X@B1
+    A2@X = X@B2
+        .....
+    An@X = X@B_n
+    """
+    #Solving AX = BX, need n >= 2 pairs of transforms, i.e len(A) = len(B) >= 2
     #based on MATLAB code in Olav Vision Notes
     n = len(A)
     Ka = np.zeros((3,n)); Kb = np.zeros((3,n))
@@ -819,7 +844,6 @@ def handEye(A,B):
     v = vh.conj().T
 
     R = v@u.T
-    
     C = []; d = []
     for i in range(0,n):
         C.append(A[i][0:3,0:3] - np.eye(3))

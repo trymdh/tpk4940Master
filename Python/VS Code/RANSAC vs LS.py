@@ -14,7 +14,7 @@ os.chdir('C:/Users/trymdh.WIN-NTNU-NO/OneDrive/Master/VS Code/laserimage') #work
 
 laser_npy = os.getcwd().replace("\\","/") + "/*.npy"
 laser_npy = glob.glob(laser_npy)
-ext_points = extractPoints(laser_npy,rMats,tvecs,K_inv)
+ext_points = extractPoints(laser_npy,rMats,tvecs,K_inv,dist)
 
 ext_points = np.reshape(ext_points,(-1,3))
 #ext_points = ext_points[2048:]
