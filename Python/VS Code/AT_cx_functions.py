@@ -531,7 +531,6 @@ def extractPoints(laser_npy,rMats,tvecs,K,distCoeff):
     return ext_points
 
 def drawFrame(R,t):
-
     fig = plt.figure()
     ax = plt.axes(projection='3d')
     ax.set_xlabel('X')
@@ -557,20 +556,11 @@ def drawFrame(R,t):
     return 0
 
 def getCentroid3D(pointCloud):
-    #this function takes in all the points seperated into their x,y and z coordinates, 
-    #and returns the centroid of all the points.
-    xs = pointCloud[:,0]
-    ys = pointCloud[:,1]
-    zs = pointCloud[:,2]
+    #this function returns the centroid
+    xs = pointCloud[:,0]; ys = pointCloud[:,1]; zs = pointCloud[:,2]
+    x_av = np.average(xs); y_av = np.average(ys); z_av = np.average(zs)
 
-    C = []
-    x_av = np.average(xs)
-    y_av = np.average(ys)
-    z_av = np.average(zs)
-    C.append(x_av)
-    C.append(y_av)
-    C.append(z_av)
-    return np.asarray(C)
+    return np.array([x_av,y_av,z_av])
 
 def getPlaneData(pI,ax,ls = False, svd = False):
     #This function takes the plane parameters and the matplotlib plot object as input 
@@ -615,7 +605,6 @@ def estimatePlane(points):
     p_1_h = np.append(p_1,1); p_2_h = np.append(p_2,1); p_3_h = np.append(p_3,1)
     #Criteria for a point to be in the plane is x_h . Pi ~ 0 is satisfied.
     cri1 = np.dot(p_1_h,pI); cri2 = np.dot(p_2_h,pI); cri3 = np.dot(p_3_h,pI)
-
     conditions = [np.around(cri1,decimals=7) == 0,np.around(cri3,decimals=7) == 0,np.around(cri3,decimals=7) == 0]
 
     if all(conditions):
@@ -644,13 +633,14 @@ def getError(pointCloud,n,cent,d):
     return error_vec,median_error,error_std
 
 def ransacPlane(pointCloud):
-    ite = 0
     bestFit = None
     bestErr = np.inf
     centroid = None
-    k = 1000
     best_cnt_in = 0
     goal_inlier = 0.5*len(pointCloud)
+
+    ite = 0
+    k = 1000
     while ite < k:
         if msvcrt.kbhit():
             key = str(msvcrt.getch()).replace("b'","").replace("'","")
@@ -680,7 +670,7 @@ def ransacPlane(pointCloud):
                 best_cnt_in = cnt_in
                 bestErr = error
                 centroid = c
-                bestFit = -betterFit
+                bestFit = betterFit*betterFit[3]
                 print("\nIteration {0}".format(ite + 1))
                 print("Inlier count: {0} / {1}".format(best_cnt_in,len(pointCloud)))
                 print ("{0}x + {1}y + {2}z + {3}".format(bestFit[0], bestFit[1], bestFit[2],bestFit[3]))
@@ -688,7 +678,7 @@ def ransacPlane(pointCloud):
                 print(bestErr)
                 
         ite += 1
-    return np.squeeze(np.asarray(bestFit)),centroid,bestErr
+    return bestFit,centroid,bestErr
 
 def homogenify(G):
     H = []
@@ -703,8 +693,7 @@ def svd_AxB(pointCloud):
     x = x.T.reshape(-1)
     c = getCentroid3D(pointCloud)
     n = x[0:3]
-    d = x[3]
-    #n is not normalized
+    d = x[3]/np.linalg.norm(n)
     return n,c,d
 
 def countInliers(error_vec, median_error,error_std,pointCloud):

@@ -56,7 +56,7 @@ def planeify(vector_plane): #Assumes form [nx,ny,nz,cx,cy,cz]
     plane = [vector_plane[0],vector_plane[1],vector_plane[2],-vector_plane[0]*(vector_plane[3])-vector_plane[1]*(vector_plane[4])-vector_plane[2]*(vector_plane[5])] 
     #Or on form [Ax + By + D] = z
     plane_s = [-plane[0]/plane[2],-plane[1]/plane[2],-plane[3]/plane[2]]
-    return plane,plane_s
+    return np.asarray(plane),np.asarray(plane_s)
 
 def error_checker(plane,point_cloud):
     [A,B,C,D] = plane
@@ -276,7 +276,7 @@ error_QP = error_checker(plane_QP,ext_points)
 ransac_fit,c,res = ransacPlane(ext_points)
 RANSACPLANE = np.append(ransac_fit[0:3],c)
 [RANSACPLANE,rS] = planeify(RANSACPLANE) 
-print("QP plan:{0}\nRansac Plan: {1}".format(p,RANSACPLANE*1.p[3]))
+print("QP plan:{0}\nRansac Plan: {1}".format(p,RANSACPLANE))
 ransac_error = error_checker(RANSACPLANE,ext_points)
 print("Espen_QP error:{0}\nRansac error: {1}".format(error_QP,ransac_error))
 #print("Tot plane-normal error LS :",error_LS," ", "Tot plane-normal error QP :", error_QP)
