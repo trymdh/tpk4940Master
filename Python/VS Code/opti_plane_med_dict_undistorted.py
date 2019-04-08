@@ -15,7 +15,6 @@ def fdiff_checker(plane,point_cloud):
         error = point_cloud[i,2] - (A*point_cloud[i,0] + B*point_cloud[i,1] + D)/C
         errors = np.append(errors,error)
     return sum(errors)/len(errors)
-
 def weights(Errors1,Errors2,mode):
     if mode == 'Repr': #This mode uses the reprojection errors as quantitative measurement as according to tot_error/error^2 which yields high cost to low error points
         NumberOfImages = int(len(Errors1[1,:])/2)
@@ -51,21 +50,11 @@ def weights(Errors1,Errors2,mode):
             weights[key] = rot_errors + trans_errors / (val)**2
     return weights
 
-def planeify(vector_plane): #Assumes form [nx,ny,nz,cx,cy,cz]
     #[A,B,C,D]
     plane = [vector_plane[0],vector_plane[1],vector_plane[2],-vector_plane[0]*(vector_plane[3])-vector_plane[1]*(vector_plane[4])-vector_plane[2]*(vector_plane[5])] 
     #Or on form [Ax + By + D] = z
     plane_s = [-plane[0]/plane[2],-plane[1]/plane[2],-plane[3]/plane[2]]
     return np.asarray(plane),np.asarray(plane_s)
-
-def error_checker(plane,point_cloud):
-    [A,B,C,D] = plane
-    distances = np.array([])
-    for i in range(len(point_cloud[:,0])):
-        [x,y,z] = [point_cloud[i,0],point_cloud[i,1],point_cloud[i,2]] 
-        d = abs(A*x + B*y + C*z + D)/np.sqrt(A**2 + B**2 + C**2)
-        distances = np.append(distances,d)
-    return sum(distances)/len(distances)
 def loadCaliParam():
     """
     This functions loads the camera calibration parameters
@@ -145,7 +134,6 @@ for i in range(1,len(laser_npy)):
     #Undistort the pixels from the file
     undistorted_point = cv2.undistortPoints(pix_coord, K, dist).reshape(-1,2)
     
-
     for coord in undistorted_point:
         if coord[1] > -0.5:
             #print(coord)
@@ -184,14 +172,10 @@ def QP_solver(dictio,W):
 
     [cx_, cy_, cz_] = np.array([sum(x_values)/len(x_values),sum(y_values)/len(y_values),sum(z_values)/len(z_values)])
 
-
-
     #Distance from each point to centroid
     centroid_vectors = {}
     for key,val in dictio.items():
         centroid_vectors[key] = np.array([(val[0::3]-cx_),(val[1::3]-cy_),(val[2::3]-cz_)])
-
-
 
     x = ext_points[:,0]
     y = ext_points[:,1]
@@ -266,21 +250,23 @@ raw = [23030113428831100,70634739100933070, 5609153211116791, 137097995912371100
 """
 #plane_QP = [nOpt[0],nOpt[1],nOpt[2],-nOpt[0]*cx-nOpt[1]*cy-nOpt[2]*cz]
 
-#error_LS = error_checker(plane_LS,ext_points)
+
 plane_QP = p/np.linalg.norm(plane_QP)
 error_QP = error_checker(plane_QP,ext_points)
 
+#Ransac Plane
+ransac_fit,c,ransac_error = ransacXn(ext_points,1)
 
-#vet ikke hvorfor men det ser ut som dersom jeg ganger "d" koeffisientenen i QP plane med ransacen så
-#ordner det seg!?
-ransac_fit,c,res = ransacPlane(ext_points)
-RANSACPLANE = np.append(ransac_fit[0:3],c)
-[RANSACPLANE,rS] = planeify(RANSACPLANE) 
-print("QP plan:{0}\nRansac Plan: {1}".format(p,RANSACPLANE))
-ransac_error = error_checker(RANSACPLANE,ext_points)
-print("Espen_QP error:{0}\nRansac error: {1}".format(error_QP,ransac_error))
-#Save ransac på nx,ny,nz,cx,cy,cz:
-np.save('C:/Users/trymdh.WIN-NTNU-NO/OneDrive/tpk4940Master/Python/VS Code/RansacPlane.npy',np.append(RANSACPLANE[0:3],c))
+#LS Plane 
+ls_fit,res = lsPlane(ext_points)
+ls_plane,ls_plane_s = planeify(ls_fit)
+error_LS = error_checker(-ls_plane,ext_points)
+
+print(" LS Plan : {0}\n QP Plane: {1}\n Ransac Plan: {2}".format(-ls_plane,p,ransac_fit))
+print(" LS error: {0}\n QP error: {1}\n Ransac error: {2}".format(error_LS,error_QP,ransac_error))
+    
+
+
 #print("Tot plane-normal error LS :",error_LS," ", "Tot plane-normal error QP :", error_QP)
 
 #zerror_LS = fdiff_checker(plane_LS,ext_points)
