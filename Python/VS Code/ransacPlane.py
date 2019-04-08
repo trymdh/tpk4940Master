@@ -36,7 +36,6 @@ os.chdir('C:/Users/trymdh.WIN-NTNU-NO/OneDrive/tpk4940Master/Espen Code/LaserAnd
 
 laser_npy = os.getcwd().replace("\\","/") + "/*.npy"
 laser_npy = sortList(glob.glob(laser_npy))
-print(len(laser_npy))
 ext_points = extractPoints(laser_npy,rMats,tvecs,K,dist)
 
 ext_points = np.reshape(ext_points,(-1,3))
@@ -49,13 +48,13 @@ RANSACPLANE = np.append(ransac_fit[0:3],c)
 np.save('C:/Users/trymdh.WIN-NTNU-NO/OneDrive/tpk4940Master/Python/VS Code/RansacPlane.npy',RANSACPLANE)
 EspenLaser = np.load('C:/Users/trymdh.WIN-NTNU-NO/OneDrive/tpk4940Master/Espen Code/laserplane.npy')
 print(EspenLaser)
-"""
+
 EspenLaser = np.load('C:/Users/trymdh.WIN-NTNU-NO/OneDrive/tpk4940Master/Espen Code/laserplane.npy')
 print(EspenLaser)
+"""
 EspenPlan,EspenPlan_s = planeify(EspenLaser)
 espenError = error_checker(EspenPlan,ext_points)
 ransacError = error_checker(ransac_fit[0:4],ext_points)
-
 
 
 print("EspenError: {0}".format(espenError))

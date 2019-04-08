@@ -598,7 +598,7 @@ def estimatePlane(points):
     #The plane normal is then the cross product of these two vectors, n = [a,b,c]
     n = np.cross(v1,v2)
     #distance from the plane to the origin
-    d = -np.dot(p_3,np.cross(p_1,p_2))
+    d = -np.dot(p_3,np.cross(p_1,p_2))*np.linalg.norm(n)
     #Plane, pI = [n,d] = [a,b,c,d]
     pI = np.append(n,d)
     #p_h = [x,y,z,1]

@@ -72,7 +72,7 @@ def loadCaliParam():
     obtained from Matlab into numpy arrays
     """
     #path to the folder where the parameters are saved
-    caliParam_folder = "C:/Users/Trym/OneDrive/tpk4940Master/Espen Code/Matlab" #work pc
+    caliParam_folder = "C:/Users/trymdh.WIN-NTNU-NO/OneDrive/tpk4940Master/Espen Code/Matlab" #work pc
     #caliParam_folder = "C:/Users/sioux/OneDrive/Master/Laserplankalibrering/Bilder_og_koordinater/Matlab" # home pc
     os.chdir(caliParam_folder)
 
@@ -111,7 +111,7 @@ def loadCaliParam():
 ret,rets,K,tvecs,rMats,dist,rotVecError,transVecError = loadCaliParam()
 
 K_inv = np.linalg.inv(K)
-os.chdir('C:/Users/Trym/OneDrive/tpk4940Master/Espen Code/LaserAndNpys') #LAPTOP
+os.chdir('C:/Users/trymdh.WIN-NTNU-NO/OneDrive/tpk4940Master/Espen Code/LaserAndNpys')
 laser_npy = os.getcwd().replace("\\","/") + "/*.npy"
 laser_npy = glob.glob(laser_npy)
 number_of_laserfiles = len(laser_npy)
@@ -279,10 +279,12 @@ RANSACPLANE = np.append(ransac_fit[0:3],c)
 print("QP plan:{0}\nRansac Plan: {1}".format(p,RANSACPLANE))
 ransac_error = error_checker(RANSACPLANE,ext_points)
 print("Espen_QP error:{0}\nRansac error: {1}".format(error_QP,ransac_error))
+#Save ransac på nx,ny,nz,cx,cy,cz:
+np.save('C:/Users/trymdh.WIN-NTNU-NO/OneDrive/tpk4940Master/Python/VS Code/RansacPlane.npy',np.append(RANSACPLANE[0:3],c))
 #print("Tot plane-normal error LS :",error_LS," ", "Tot plane-normal error QP :", error_QP)
 
 #zerror_LS = fdiff_checker(plane_LS,ext_points)
-zerror_QP = fdiff_checker(plane_QP,ext_points)
+#zerror_QP = fdiff_checker(plane_QP,ext_points)
 
 #print("Tot fval error LS :",zerror_LS," ", "Tot fval error QP :", zerror_QP)
 #QP_weights = weights(rets)
