@@ -464,8 +464,8 @@ def loadCaliParam():
     #caliParam_folder = "C:/Users/TrymAsus/OneDrive/tpk4940Master/Matlab" #LAPTOP
     
     #New calibration files:
-    caliParam_folder = "C:/Users/trymdh.WIN-NTNU-NO/OneDrive/tpk4940Master/Espen Code/Matlab"
-    #caliParam_folder = "C:/Users/TrymAsus/OneDrive/tpk4940Master/Espen Code/Matlab" #LAPTOP
+    #caliParam_folder = "C:/Users/trymdh.WIN-NTNU-NO/OneDrive/tpk4940Master/Espen Code/Matlab"
+    caliParam_folder = "C:/Users/TrymAsus/OneDrive/tpk4940Master/Espen Code/Matlab" #LAPTOP
     #caliParam_folder = "C:/Users/Trym/OneDrive/tpk4940Master/Espen Code/Matlab" # home pc
     os.chdir(caliParam_folder)
 
