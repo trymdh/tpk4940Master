@@ -7,7 +7,7 @@ import msvcrt
 def triang(pix):
     t = time.time()
     ret,K,tvecs,rMats,dist= loadCaliParam()
-    laser = np.load('C:/Users/TrymAsus/OneDrive/tpk4940Master/Python/VS Code/RansacPlane.npy')
+    laser = np.load('C:/Users/TrymAsus/OneDrive/tpk4940Master/Python/VS Code/BestRansacPlane.npy')
     laser[0:3] = laser[0:3]*1000
     #1 Undistort the pixels
     pix = pix.reshape(-2, 1, 2)

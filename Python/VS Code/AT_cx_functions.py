@@ -562,7 +562,7 @@ def getCentroid3D(pointCloud):
 
     return np.array([x_av,y_av,z_av])
 
-def getPlaneData(pI,ax,ls = False, svd = False):
+def getPlaneData(pI,ax):
     #This function takes the plane parameters and the matplotlib plot object as input 
     #and returns the data values needed to plot a wireframe using plt.subplot.plot_wireframe()
     xlim = ax.get_xlim()
@@ -570,22 +570,12 @@ def getPlaneData(pI,ax,ls = False, svd = False):
     X,Y = np.meshgrid(np.arange(xlim[0], xlim[1]),
                     np.arange(ylim[0], ylim[1]))
     Z = np.zeros(X.shape)
-    if ls:
-        for r in range(X.shape[0]):
-            for c in range(X.shape[1]):
-                #z = a*X + b*Y + d    
-                Z[r,c] = pI[0] * X[r,c] + pI[1] * Y[r,c] + pI[2]
-        return X,Y,Z
+    for r in range(X.shape[0]):
+        for c in range(X.shape[1]):
+            #z = a*X + b*Y + d    
+            Z[r,c] = -(pI[0] * X[r,c] + pI[1] * Y[r,c] + pI[3])*1./pI[2]
 
-    elif svd:
-        for r in range(X.shape[0]):
-            for c in range(X.shape[1]):
-                #z = a*X + b*Y + d    
-                Z[r,c] = -(pI[0] * X[r,c] + pI[1] * Y[r,c] + pI[3])*1./(pI[2])
-        return X,Y,Z
-    if pI == None:
-        print('Plane not found')
-        return 0
+    return X,Y,Z
 
 def estimatePlane(points):
     #This function estimates a plane from three points and return the plane parameters
@@ -621,11 +611,11 @@ def error_checker(plane,point_cloud):
         distances = np.append(distances,d)
     return sum(distances)/len(distances)
 
-def getError(pointCloud,pI):
+def getError(pointCloud,pI,c):
     [A,B,C,D] = pI
     error_list = []
     for point in pointCloud:
-        d = abs(A*point[0] + B*point[1] + C*point[2] + D)/np.sqrt(A**2 + B**2 + C**2)
+        d = np.abs(A*(point[0]-c[0]) + B*(point[1]-c[1]) + C*(point[2]-c[2]))/np.sqrt(A**2 + B**2 + C**2)
         error_list.append(d)
     error_vec = np.array(error_list)
     median_error = np.median(error_list)
@@ -651,13 +641,14 @@ def ransacPlane(pointCloud):
         maybeIndex = np.random.choice(pointCloud.shape[0],3,replace = False)
         maybeInliers = pointCloud[maybeIndex,:]
         pI,c = svd_AxB(homogenify(maybeInliers))
+        
         #calculate error and inlier threshold
-        error_vec,median_error,error_std = getError(pointCloud,pI)
+        error_vec,median_error,error_std = getError(pointCloud,pI,c)
         #count inliers
-        alsoInliers = countInliers(error_vec, median_error,error_std,pointCloud)
-        cnt_in = len(alsoInliers)
+        Inliers = countInliers(error_vec, median_error,error_std,pointCloud)
+        cnt_in = len(Inliers)
         if cnt_in >= goal_inlier:
-            betterData = alsoInliers
+            betterData = Inliers
             #The new dataset contains few outliers => use LS to estimate plane
             #betterFit,betterRes = lsPlane(betterData)
             betterFit,c = svd_AxB(homogenify(betterData))
@@ -667,10 +658,10 @@ def ransacPlane(pointCloud):
                 w = cnt_in/len(pointCloud)
                 N = np.log(1-0.99)/np.log(1-w**3)
                 #Update best fit plane
+                bestFit = betterFit
                 best_cnt_in = cnt_in
                 bestErr = error
                 centroid = c
-                bestFit = betterFit
                 #print("\nIteration {0}".format(ite + 1))
                 #print("Inlier count: {0} / {1}".format(best_cnt_in,len(pointCloud)))
                 #print ("{0}x + {1}y + {2}z + {3}".format(bestFit[0], bestFit[1], bestFit[2],bestFit[3]))
@@ -689,6 +680,7 @@ def ransacXn(pointCloud,n):
     bestErr = error_checker(bestPlane,pointCloud)
     for i in range(0,n):
         ransac_fit,c,err = ransacPlane(pointCloud)
+        print(err)
         if err < bestErr:
             bestFit = np.append(ransac_fit[0:3],c)
             bestPlane,bestPlane_s = planeify(bestFit)
@@ -719,14 +711,14 @@ def svd_AxB(pointCloud):
 def countInliers(error_vec, median_error,error_std,pointCloud):
     i = 0
     cnt_in = 0
-    alsoInliers = []
+    Inliers = []
     for error in error_vec:
         if np.abs(error) < np.abs(median_error) + 0.5*np.abs(error_std):
             cnt_in += 1
-            alsoInliers.append(pointCloud[i])
+            Inliers.append(pointCloud[i])
         i += 1
-    alsoInliers = np.array(alsoInliers)
-    return alsoInliers
+    Inliers = np.array(Inliers)
+    return Inliers
 
 def lsPlane(pointCloud,print_out = False):
     """
@@ -866,14 +858,16 @@ def handEye(A,B):
     
     return X
 
-
 #ESPEN CODE
-def planeify(vector_plane): #Assumes form [nx,ny,nz,cx,cy,cz]
+def planeify(vector_plane): #Assumes form [a,b,c,x_0,y_0,z_0]
+    #a*x_0 + b*y_0 + c*z_0 + d = 0
+    #-> d = - (a*x_0 + b*y_0 + c*z_0)
+    D = -(vector_plane[0]*(vector_plane[3])+vector_plane[1]*(vector_plane[4])+vector_plane[2]*(vector_plane[5]))
     #[A,B,C,D]
-    plane = [vector_plane[0],vector_plane[1],vector_plane[2],-vector_plane[0]*(vector_plane[3])-vector_plane[1]*(vector_plane[4])-vector_plane[2]*(vector_plane[5])] 
+    plane = np.asarray([vector_plane[0],vector_plane[1],vector_plane[2],D])
     #Or on form [Ax + By + D] = z
-    plane_s = [-plane[0]/plane[2],-plane[1]/plane[2],-plane[3]/plane[2]]
-    return np.asarray(plane),np.asarray(plane_s)
+    plane_s = np.asarray([-plane[0]/plane[2],-plane[1]/plane[2],-plane[3]/plane[2]])
+    return plane,plane_s
 
 def error_checker(plane,point_cloud):
     [A,B,C,D] = plane

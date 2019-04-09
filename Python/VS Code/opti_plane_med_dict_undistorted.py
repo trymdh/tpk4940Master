@@ -255,7 +255,7 @@ plane_QP = p/np.linalg.norm(plane_QP)
 error_QP = error_checker(plane_QP,ext_points)
 
 #Ransac Plane
-ransac_fit,c,ransac_error = ransacXn(ext_points,1)
+ransac_fit,c,ransac_error = ransacXn(ext_points,10)
 
 #LS Plane 
 ls_fit,res = lsPlane(ext_points)
@@ -265,7 +265,6 @@ error_LS = error_checker(-ls_plane,ext_points)
 print(" LS Plan : {0}\n QP Plane: {1}\n Ransac Plan: {2}".format(-ls_plane,p,ransac_fit))
 print(" LS error: {0}\n QP error: {1}\n Ransac error: {2}".format(error_LS,error_QP,ransac_error))
     
-
 
 #print("Tot plane-normal error LS :",error_LS," ", "Tot plane-normal error QP :", error_QP)
 
