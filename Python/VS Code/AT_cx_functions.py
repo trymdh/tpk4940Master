@@ -567,12 +567,11 @@ def getPlaneData(pI,ax):
     #and returns the data values needed to plot a wireframe using plt.subplot.plot_wireframe()
     xlim = ax.get_xlim()
     ylim = ax.get_ylim()
-    X,Y = np.meshgrid(np.arange(xlim[0], xlim[1]),
-                    np.arange(ylim[0], ylim[1]))
+    X,Y = np.meshgrid(np.arange(xlim[0], xlim[1]),np.arange(ylim[0], ylim[1]))
     Z = np.zeros(X.shape)
     for r in range(X.shape[0]):
         for c in range(X.shape[1]):
-            #z = a*X + b*Y + d    
+            #z = a*X + b*Y + d 
             Z[r,c] = -(pI[0] * X[r,c] + pI[1] * Y[r,c] + pI[3])*1./pI[2]
 
     return X,Y,Z
@@ -720,7 +719,7 @@ def countInliers(error_vec, median_error,error_std,pointCloud):
     Inliers = np.array(Inliers)
     return Inliers
 
-def lsPlane(pointCloud,print_out = False):
+def lsPlane(pointCloud):
     """
     Code below is based on the user "BEN" from 
     https://stackoverflow.com/questions/1400213/3d-least-squares-plane
@@ -747,10 +746,6 @@ def lsPlane(pointCloud,print_out = False):
     A = np.matrix(A)
     b = np.matrix(b).T
 
-    #A*fit = B 
-    # => (A' * A) * fit = A' * B
-    # => fit = (A' * A)^(-1) * A' * B
-    #fit = (A' * A)^(-1) * (A' * B) = [a,b,d]
     fit = (A.T @ A).I @ A.T @ b 
     #error = vertical offset between point and plane
     #error = z_i - z_proj
@@ -762,17 +757,8 @@ def lsPlane(pointCloud,print_out = False):
     
     n = np.cross(v1,v2)
     n /= np.linalg.norm(n)
-    
-    #Frobenius norm
-    residual = np.linalg.norm(error) 
-    
-    if print_out:
-        print ("LS solution:")
-        #fit[0] = a, fit[1] = b, fit[2] = d, c = 1
-        print ("%f x - %f y - %f = z" % (fit[0], fit[1], fit[2]))
-        print ("residual:")
-        print(residual)
-    return np.append(n,c),residual
+
+    return np.append(n,c)
 
 #Matrix functions
 #--------------------------------------------------------------------------------------------------------------------------------

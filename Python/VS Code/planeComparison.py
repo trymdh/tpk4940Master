@@ -4,8 +4,6 @@ from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.pyplot as plt
 import os
 import glob
-from scipy.optimize import minimize
-import cv2 as cv2
 from AT_cx_functions import*
 
 def loadCaliParam():
@@ -104,10 +102,6 @@ for i in range(1,len(laser_npy)):
 
 ext_points = np.reshape(ext_points,(-1,3))
 
-
-
-plt.figure(1)
-ax = plt.subplot(111, projection ='3d')
 #QP plane
 os.chdir('C:/Users/trymdh.WIN-NTNU-NO/OneDrive/tpk4940Master/Espen Code')
 plane_QP = np.load('laserplane.npy') 
@@ -120,18 +114,21 @@ error_QP = error_checker(plane_QP,ext_points)
 ransac_fit,c,ransac_error = ransacXn(ext_points,1)
 
 #LS Plane 
-ls_fit,res = lsPlane(ext_points)
+ls_fit = lsPlane(ext_points)
 ls_plane,ls_plane_s = planeify(ls_fit)
 error_LS = error_checker(-ls_plane,ext_points)
-
 
 print(" LS Plan : {0}\n QP Plane: {1}\n Ransac Plan: {2}".format(-ls_plane,p,ransac_fit))
 print(" LS error: {0}\n QP error: {1}\n Ransac error: {2}".format(error_LS,error_QP,ransac_error))
 
+#plot the points and the planes
 ext_points = ext_points[::100]
 x = ext_points[:,0]
 y = ext_points[:,1]
 z = ext_points[:,2]
+
+plt.figure(1)
+ax = plt.subplot(111, projection ='3d')
 ax.scatter(x, y, z, color ='b')
 X_r,Y_r,Z_r = getPlaneData(ransac_fit,ax)
 ax.plot_wireframe(X_r,Y_r,Z_r, color='g')

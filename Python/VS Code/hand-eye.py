@@ -142,4 +142,3 @@ A = [A_1,A_2]
 B = [B_1,B_2]
 X_est = handEye(A,B)
 print(X_est)
-print(np.linalg.norm(X_est-X))
