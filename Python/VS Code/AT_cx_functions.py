@@ -627,15 +627,10 @@ def ransacPlane(pointCloud):
     bestErr = np.inf
     centroid = None
     best_cnt_in = 0
-    goal_inlier = 0.5*len(pointCloud)
+    goal_inlier = 0.7*len(pointCloud)
     N = np.inf
     ite = 0
     while ite < N:
-        if msvcrt.kbhit():
-            key = str(msvcrt.getch()).replace("b'","").replace("'","")
-            if key == 'q':
-                print("Loop exited")
-                break
         #sample 3 random points and estimate plane
         maybeIndex = np.random.choice(pointCloud.shape[0],3,replace = False)
         maybeInliers = pointCloud[maybeIndex,:]
@@ -674,19 +669,23 @@ def ransacPlane(pointCloud):
 def ransacXn(pointCloud,n):
     #Running the ransac function n-times and return the best fit if the error is smaller than the "best-fit-to-date" error.
     os.chdir('C:/Users/trymdh.WIN-NTNU-NO/OneDrive/tpk4940Master/Python/VS Code')
-    bestFit = np.load('EvenBetterRansacPlane.npy')
+    bestFit = np.load('BestRansacPlane.npy')
     bestPlane,bestPlane_s = planeify(bestFit)
     bestErr = error_checker(bestPlane,pointCloud)
     for i in range(0,n):
+        if msvcrt.kbhit():
+            key = str(msvcrt.getch()).replace("b'","").replace("'","")
+            if key == 'q':
+                print("Loop exited")
+                break
         ransac_fit,c,err = ransacPlane(pointCloud)
-        print(err)
+        print("Current error is:{0} \t Best error is: {1}".format(err,bestErr))
         if err < bestErr:
             bestFit = np.append(ransac_fit[0:3],c)
             bestPlane,bestPlane_s = planeify(bestFit)
             bestErr = err
             print("BestError: {0}".format(bestErr))
-            
-    np.save('C:/Users/trymdh.WIN-NTNU-NO/OneDrive/tpk4940Master/Python/VS Code/EvenBetterRansacPlane.npy',bestFit)
+            np.save('C:/Users/trymdh.WIN-NTNU-NO/OneDrive/tpk4940Master/Python/VS Code/BestRansacPlane.npy',bestFit)
     return bestPlane,c,bestErr
 
 def homogenify(G):

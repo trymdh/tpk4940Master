@@ -111,7 +111,7 @@ plane_QP = p/np.linalg.norm(p)
 error_QP = error_checker(plane_QP,ext_points)
 
 #Ransac Plane
-ransac_fit,c,ransac_error = ransacXn(ext_points,1)
+ransac_fit,c,ransac_error = ransacXn(ext_points,10)
 
 #LS Plane 
 ls_fit = lsPlane(ext_points)

@@ -21,4 +21,4 @@ plt.plot(img_data.ravel() / 64.0)
 plt.show()
 #save the laserlineprofile in an numpy-array
 #np.save('laser.npy', img_data / 64.0)
-a = 1
+
