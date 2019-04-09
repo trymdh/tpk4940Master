@@ -1,10 +1,7 @@
-from matplotlib import pyplot as plt
-import numpy as np
-from mpl_toolkits.mplot3d import Axes3D
-import matplotlib.pyplot as plt
-import os
-import glob
 from AT_cx_functions import*
+import numpy as np 
+import glob
+import os 
 
 def loadCaliParam():
     """
@@ -57,6 +54,7 @@ laser_npy = glob.glob(laser_npy)
 number_of_laserfiles = len(laser_npy)
 
 ext_points = np.array([])
+
 j = 0
 pixel_dict = {} #Sorts each extracted point in a dictionary based on image such that weights can be correctly assigned
 for i in range(1,len(laser_npy)):
@@ -102,38 +100,11 @@ for i in range(1,len(laser_npy)):
 
 ext_points = np.reshape(ext_points,(-1,3))
 
-#QP plane
-os.chdir('C:/Users/trymdh.WIN-NTNU-NO/OneDrive/tpk4940Master/Espen Code')
-plane_QP = np.load('laserplane.npy') 
+os.chdir('C:/Users/trymdh.WIN-NTNU-NO/OneDrive/tpk4940Master/Python/VS Code')
+plane = np.load('BestRansacPlane.npy') 
+c = plane[3:6]
+plane, plane_s = planeify(plane)
+error_vec,median_err,std_err = getError(ext_points,plane,c)
 
-[p,ps] = planeify(plane_QP)
-plane_QP = p/np.linalg.norm(p)
-error_QP = error_checker(plane_QP,ext_points)
 
-#Ransac Plane
-ransac_fit,c,ransac_error = ransacXn(ext_points,10)
-
-#LS Plane 
-ls_fit = lsPlane(ext_points)
-ls_plane,ls_plane_s = planeify(ls_fit)
-error_LS = error_checker(-ls_plane,ext_points)
-
-print(" LS Plan : {0}\n QP Plane: {1}\n Ransac Plan: {2}".format(-ls_plane,p,ransac_fit))
-print(" LS error: {0}\n QP error: {1}\n Ransac error: {2}".format(error_LS,error_QP,ransac_error))
-
-#plot the points and the planes
-#ext_points = ext_points[::100]
-x = ext_points[:,0]
-y = ext_points[:,1]
-z = ext_points[:,2]
-
-plt.figure(1)
-ax = plt.subplot(111, projection ='3d')
-ax.scatter(x, y, z, color ='b')
-X_r,Y_r,Z_r = getPlaneData(ransac_fit,ax)
-ax.plot_wireframe(X_r,Y_r,Z_r, color='g')
-X_ls,Y_ls,Z_ls = getPlaneData(ls_plane,ax)
-ax.plot_wireframe(X_ls,Y_ls,Z_ls, color='b')
-X_qp,Y_qp,Z_qp = getPlaneData(p,ax)
-ax.plot_wireframe(X_qp,Y_qp,Z_qp, color='r')
-plt.show()
+plotError2(error_vec,median_err,std_err)

@@ -610,15 +610,32 @@ def error_checker(plane,point_cloud):
         distances = np.append(distances,d)
     return sum(distances)/len(distances)
 
+def plotError(error_vec,median_error,error_std):
+    plt.ion
+    plt.figure(1)
+    plt.hist(error_vec,bins=np.linspace(-4,4,50))
+    plt.show()
+
+def plotError2(error_vec,median_error,error_std):
+    stand_err = error_vec[np.abs(error_vec) < 4]
+    mean = np.mean(stand_err)
+    std = np.std(stand_err)
+    stand_err = (stand_err-mean)/std
+    print("std:{0} and mean: {1}".format(std,mean))
+    plt.ion
+    plt.figure(1)
+    plt.hist(stand_err,bins=np.linspace(-4,4,1000))
+    plt.show()
+    
 def getError(pointCloud,pI,c):
     [A,B,C,D] = pI
     error_list = []
     for point in pointCloud:
-        d = np.abs(A*(point[0]-c[0]) + B*(point[1]-c[1]) + C*(point[2]-c[2]))/np.sqrt(A**2 + B**2 + C**2)
+        d = (A*(point[0]-c[0]) + B*(point[1]-c[1]) + C*(point[2]-c[2]))/np.sqrt(A**2 + B**2 + C**2)
         error_list.append(d)
     error_vec = np.array(error_list)
-    median_error = np.median(error_list)
-    error_std = np.std(error_list)
+    median_error = np.median(error_vec)
+    error_std = np.std(error_vec)
     #error_vec contains distances between each point in pointCloud and the plane pI
     return error_vec,median_error,error_std
 
@@ -711,7 +728,8 @@ def countInliers(error_vec, median_error,error_std,pointCloud):
     cnt_in = 0
     Inliers = []
     for error in error_vec:
-        if np.abs(error) < np.abs(median_error) + 0.5*np.abs(error_std):
+        #if np.abs(error) < np.abs(median_error) + 0.5*np.abs(error_std):
+        if np.abs(error) < 0.2:
             cnt_in += 1
             Inliers.append(pointCloud[i])
         i += 1
