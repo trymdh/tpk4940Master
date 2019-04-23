@@ -24,7 +24,7 @@ def d_and_L(q):
 
 def workDistance(q,L):
     """
-    This function returns the workdistance when we know the desired fan angle and length of laser line projection
+    This function returns the workdistance in cm when we know the desired fan angle and length of laser line projection
     """
     Ds = []
     for D in range(100): #D in cm
@@ -36,8 +36,11 @@ def workDistance(q,L):
     else:
         return Ds
 
-D = workDistance(45,40)
-print(D)
+fA = 45
+lP = 33.5
+D = workDistance(fA,lP)
+print("With a {0} degree fan angle, and laser line length of {1}, the workdistance in cm is: {2}".format(fA,lP,D))
+
 
 #Ds,Ls = d_and_L(45)
 #print(Ds)

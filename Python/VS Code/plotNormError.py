@@ -106,5 +106,4 @@ c = plane[3:6]
 plane, plane_s = planeify(plane)
 error_vec,median_err,std_err = getError(ext_points,plane,c)
 
-
 plotError2(error_vec,median_err,std_err)

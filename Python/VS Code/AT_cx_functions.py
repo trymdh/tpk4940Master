@@ -461,11 +461,11 @@ def loadCaliParam():
     #Old calibration files
     #caliParam_folder = "C:/Users/trymdh.WIN-NTNU-NO/OneDrive/tpk4940Master/Matlab" #work pc
     #caliParam_folder = "C:/Users/Trym/OneDrive/tpk4940Master/Matlab" # home pc
-    #caliParam_folder = "C:/Users/TrymAsus/OneDrive/tpk4940Master/Matlab" #LAPTOP
+    caliParam_folder = "C:/Users/TrymAsus/OneDrive/tpk4940Master/Matlab" #LAPTOP
     
     #New calibration files:
     #caliParam_folder = "C:/Users/trymdh.WIN-NTNU-NO/OneDrive/tpk4940Master/Espen Code/Matlab"
-    caliParam_folder = "C:/Users/TrymAsus/OneDrive/tpk4940Master/Espen Code/Matlab" #LAPTOP
+    #caliParam_folder = "C:/Users/TrymAsus/OneDrive/tpk4940Master/Espen Code/Matlab" #LAPTOP
     #caliParam_folder = "C:/Users/Trym/OneDrive/tpk4940Master/Espen Code/Matlab" # home pc
     os.chdir(caliParam_folder)
 
@@ -473,8 +473,8 @@ def loadCaliParam():
     ret = np.loadtxt('MeanReprojectionError.txt')
    
     #The Intrisinc Matrix
-    #mtx = np.loadtxt('IntrinsicMatrix.txt') #Old
-    mtx = np.loadtxt('./CalibrationConstants/calibratedCameraMatrix.txt') #New
+    mtx = np.loadtxt('IntrinsicMatrix.txt') #Old
+    #mtx = np.loadtxt('./CalibrationConstants/calibratedCameraMatrix.txt') #New
     
     #Rotation Matrices and translation vectors between the scene and the camera
     tvecs = np.loadtxt('TranslationVectors.txt')
@@ -486,15 +486,15 @@ def loadCaliParam():
     
     #Radial and tangential distortion coeffecients, dist = [k_1,k_2,p_1,p_2[,k_3[,k_4,k_5,k_6]]]
     dist = []
-    rDist = np.loadtxt('./CalibrationConstants/calibratedRaddist.txt') #k_1 and k_2, => k_3 = 0, this leads to dist = [k_1,k_2,p_1,p_2]
-    #rDist = np.loadtxt('RadialDistortion.txt')
-    tDist = np.loadtxt('./CalibrationConstants/calibratedTangdist.txt') #p_1 and p_2
-    #tDist = np.loadtxt('TangentialDistortion.txt') #p_1 and p_2
+    #rDist = np.loadtxt('./CalibrationConstants/calibratedRaddist.txt') #k_1 and k_2, => k_3 = 0, this leads to dist = [k_1,k_2,p_1,p_2]
+    rDist = np.loadtxt('RadialDistortion.txt')
+    #tDist = np.loadtxt('./CalibrationConstants/calibratedTangdist.txt') #p_1 and p_2
+    tDist = np.loadtxt('TangentialDistortion.txt') #p_1 and p_2
     
     dist.append(rDist)
     dist.append(tDist)
     dist = np.asarray(dist).reshape(1,4)
-
+    
     return ret,mtx,tvecs,rMats,dist
 
 def extractPoints(laser_npy,rMats,tvecs,K,distCoeff):
@@ -652,7 +652,6 @@ def ransacPlane(pointCloud):
         maybeIndex = np.random.choice(pointCloud.shape[0],3,replace = False)
         maybeInliers = pointCloud[maybeIndex,:]
         pI,c = svd_AxB(homogenify(maybeInliers))
-        
         #calculate error and inlier threshold
         error_vec,median_error,error_std = getError(pointCloud,pI,c)
         #count inliers
@@ -702,7 +701,7 @@ def ransacXn(pointCloud,n):
             bestPlane,bestPlane_s = planeify(bestFit)
             bestErr = err
             print("BestError: {0}".format(bestErr))
-            np.save('C:/Users/trymdh.WIN-NTNU-NO/OneDrive/tpk4940Master/Python/VS Code/BestRansacPlane.npy',bestFit)
+            #np.save('C:/Users/trymdh.WIN-NTNU-NO/OneDrive/tpk4940Master/Python/VS Code/BestRansacPlane.npy',bestFit)
     return bestPlane,c,bestErr
 
 def homogenify(G):
