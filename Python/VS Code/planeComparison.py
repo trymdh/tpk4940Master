@@ -111,7 +111,10 @@ plane_QP = p/np.linalg.norm(p)
 error_QP = error_checker(plane_QP,ext_points)
 
 #Ransac Plane
-ransac_fit,c,ransac_error = ransacXn(ext_points,10)
+os.chdir('C:/Users/trymdh.WIN-NTNU-NO/OneDrive/tpk4940Master/Python/VS Code')
+ransac_fit = np.load('BestRansacPlane.npy')
+[ransacPlane,rs] = planeify(ransac_fit)
+ransac_error = error_checker(ransacPlane,ext_points)
 
 #LS Plane 
 ls_fit = lsPlane(ext_points)
@@ -130,7 +133,7 @@ z = ext_points[:,2]
 plt.figure(1)
 ax = plt.subplot(111, projection ='3d')
 ax.scatter(x, y, z, color ='b')
-X_r,Y_r,Z_r = getPlaneData(ransac_fit,ax)
+X_r,Y_r,Z_r = getPlaneData(ransacPlane,ax)
 ax.plot_wireframe(X_r,Y_r,Z_r, color='g')
 X_ls,Y_ls,Z_ls = getPlaneData(ls_plane,ax)
 ax.plot_wireframe(X_ls,Y_ls,Z_ls, color='b')
