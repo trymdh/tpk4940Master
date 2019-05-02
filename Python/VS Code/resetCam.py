@@ -1,3 +1,4 @@
-from AT_cx_functions import*
+from AT_cx_functions import *
+
 hDev = getDevice()
 defaultConfig(hDev)

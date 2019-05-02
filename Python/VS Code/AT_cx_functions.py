@@ -459,9 +459,9 @@ def loadCaliParam():
     #path to the folder where the parameters are saved
     
     #Old calibration files
-    #caliParam_folder = "C:/Users/trymdh.WIN-NTNU-NO/OneDrive/tpk4940Master/Matlab" #work pc
+    caliParam_folder = "C:/Users/trymdh.WIN-NTNU-NO/OneDrive/tpk4940Master/Matlab" #work pc
     #caliParam_folder = "C:/Users/Trym/OneDrive/tpk4940Master/Matlab" # home pc
-    caliParam_folder = "C:/Users/TrymAsus/OneDrive/tpk4940Master/Matlab" #LAPTOP
+    #caliParam_folder = "C:/Users/TrymAsus/OneDrive/tpk4940Master/Matlab" #LAPTOP
     
     #New calibration files:
     #caliParam_folder = "C:/Users/trymdh.WIN-NTNU-NO/OneDrive/tpk4940Master/Espen Code/Matlab"
@@ -494,7 +494,7 @@ def loadCaliParam():
     dist.append(rDist)
     dist.append(tDist)
     dist = np.asarray(dist).reshape(1,4)
-    
+
     return ret,mtx,tvecs,rMats,dist
 
 def extractPoints(laser_npy,rMats,tvecs,K,distCoeff):
@@ -652,6 +652,7 @@ def ransacPlane(pointCloud):
         maybeIndex = np.random.choice(pointCloud.shape[0],3,replace = False)
         maybeInliers = pointCloud[maybeIndex,:]
         pI,c = svd_AxB(homogenify(maybeInliers))
+        
         #calculate error and inlier threshold
         error_vec,median_error,error_std = getError(pointCloud,pI,c)
         #count inliers
@@ -701,7 +702,7 @@ def ransacXn(pointCloud,n):
             bestPlane,bestPlane_s = planeify(bestFit)
             bestErr = err
             print("BestError: {0}".format(bestErr))
-            #np.save('C:/Users/trymdh.WIN-NTNU-NO/OneDrive/tpk4940Master/Python/VS Code/BestRansacPlane.npy',bestFit)
+            np.save('C:/Users/trymdh.WIN-NTNU-NO/OneDrive/tpk4940Master/Python/VS Code/BestRansacPlane.npy',bestFit)
     return bestPlane,c,bestErr
 
 def homogenify(G):
@@ -727,8 +728,8 @@ def countInliers(error_vec, median_error,error_std,pointCloud):
     cnt_in = 0
     Inliers = []
     for error in error_vec:
-        #if np.abs(error) < np.abs(median_error) + 0.5*np.abs(error_std):
-        if np.abs(error) < 0.2:
+        if np.abs(error) < np.abs(median_error) + 0.5*np.abs(error_std):
+        #if np.abs(error) < 0.2:
             cnt_in += 1
             Inliers.append(pointCloud[i])
         i += 1
@@ -807,59 +808,6 @@ def logMatrix(R):
     log_A = unskew(log_A_skewsym)
     return log_A
 
-#hand-eye calibration:
-def handEye(A,B):
-    """
-    Set of transforms between the work space and the robot end effector:
-    A = [A1,A2,..,An]
-    Set of transforms between between work space and camera frame:
-    B = [B1,B2,...,Bn]
-
-    One pair of A and B where q_1a != q_1b
-    A1a = T_OE_1a #Pose at joint vector q_1a
-    A1b = T_OE_1b #Pose at joint vector q_1b
-    B1a = T_CW_1a #Pose at joint vector q_1a
-    B1b = T_CW_1b #Pose at joint vector q_1b
-    -> A1 = (A1b)^(-1)@A1a
-    -> B1 = B1b@(B1a)^(-1)
-    Then the basic hand-eye equation for ONE pair of different poses is:
-    A1@X = X@B1
-    To find X we need n >= 2 different pair of poses
-    A1@X = X@B1
-    A2@X = X@B2
-        .....
-    An@X = X@B_n
-    """
-    #Solving AX = BX, need n >= 2 pairs of transforms, i.e len(A) = len(B) >= 2
-    #based on MATLAB code in Olav Vision Notes
-    n = len(A)
-    Ka = np.zeros((3,n)); Kb = np.zeros((3,n))
-    for i in range(0,n):
-        Ka[:,i] = logMatrix(A[i][0:3,0:3]).ravel()
-        Kb[:,i] = logMatrix(B[i][0:3,0:3]).ravel()
-        
-    H = Kb@Ka.T
-    u,s,vh = np.linalg.svd(H)
-    v = vh.conj().T
-
-    R = v@u.T
-    C = []; d = []
-    for i in range(0,n):
-        C.append(A[i][0:3,0:3] - np.eye(3))
-        d.append(R@B[i][0:3,3] - A[i][0:3,3])
-
-    C = np.asarray(C).reshape(3*n,3)
-    d = np.asarray(d).reshape(3*n,1)
-
-    t1 = np.linalg.inv(C.T@C)
-    t2 = C.T@d
-    t = t1@t2
-
-    X = np.eye(4)
-    X[0:3,0:3] = R ; X[0:3,3] = t.ravel()
-    
-    return X
-
 #ESPEN CODE
 def planeify(vector_plane): #Assumes form [a,b,c,x_0,y_0,z_0]
     #a*x_0 + b*y_0 + c*z_0 + d = 0
@@ -878,4 +826,5 @@ def error_checker(plane,point_cloud):
         [x,y,z] = [point_cloud[i,0],point_cloud[i,1],point_cloud[i,2]] 
         d = abs(A*x + B*y + C*z + D)/np.sqrt(A**2 + B**2 + C**2)
         distances = np.append(distances,d)
+        
     return sum(distances)/len(distances)
