@@ -72,7 +72,6 @@ for i in range(1,len(laser_npy)):
     filename = 'pixcoord_' + str(i) + '.npy'
     pix_coord = np.load(filename)
     
-    
     k = 0
     pure_coords = np.array([])
     for reading in pix_coord:

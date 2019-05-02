@@ -201,7 +201,7 @@ def cogConfig(hDev):
     cam.cx_setParam(hDev,"FOT", 10)
     cam.cx_setParam(hDev,"ExposureTimeAbs", 100)
     cam.cx_setParam(hDev,"FramePeriode", 100)
-    cam.cx_setParam(hDev,"MultipleSlopeMode", 0)
+    cam.cx_setParam(hDev,"MultipleSlopeMode", 3)
     cam.cx_setParam(hDev,"NDRMode", 0)
     cam.cx_setParam(hDev,"AoiSelector", 1)
     cam.cx_setParam(hDev,"AoiHeight", 1088)

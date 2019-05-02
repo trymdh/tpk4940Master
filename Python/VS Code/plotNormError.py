@@ -9,7 +9,7 @@ def loadCaliParam():
     obtained from Matlab into numpy arrays
     """
     #path to the folder where the parameters are saved
-    caliParam_folder = "C:/Users/trymdh.WIN-NTNU-NO/OneDrive/tpk4940Master/Espen Code/Matlab" #work pc
+    caliParam_folder = "C:/Users/TrymAsus/OneDrive/tpk4940Master/Espen Code/Matlab" #work pc
     #caliParam_folder = "C:/Users/sioux/OneDrive/Master/Laserplankalibrering/Bilder_og_koordinater/Matlab" # home pc
     os.chdir(caliParam_folder)
 
@@ -48,7 +48,7 @@ def loadCaliParam():
 ret,rets,K,tvecs,rMats,dist,rotVecError,transVecError = loadCaliParam()
 
 K_inv = np.linalg.inv(K)
-os.chdir('C:/Users/trymdh.WIN-NTNU-NO/OneDrive/tpk4940Master/Espen Code/LaserAndNpys')
+os.chdir('C:/Users/TrymAsus/OneDrive/tpk4940Master/Espen Code/LaserAndNpys')
 laser_npy = os.getcwd().replace("\\","/") + "/*.npy"
 laser_npy = glob.glob(laser_npy)
 number_of_laserfiles = len(laser_npy)
@@ -69,7 +69,6 @@ for i in range(1,len(laser_npy)):
     l_0 = np.array([0,0,0])
     filename = 'pixcoord_' + str(i) + '.npy'
     pix_coord = np.load(filename)
-    
     
     k = 0
     pure_coords = np.array([])
@@ -100,7 +99,7 @@ for i in range(1,len(laser_npy)):
 
 ext_points = np.reshape(ext_points,(-1,3))
 
-os.chdir('C:/Users/trymdh.WIN-NTNU-NO/OneDrive/tpk4940Master/Python/VS Code')
+os.chdir('C:/Users/TrymAsus/OneDrive/tpk4940Master/Python/VS Code')
 plane = np.load('BestRansacPlane.npy') 
 c = plane[3:6]
 plane, plane_s = planeify(plane)

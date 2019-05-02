@@ -62,7 +62,8 @@ for i in range(0,1000):
     laserpixel = pixCoordify(laserlinepixels.ravel() / 64 , 2048)
     points = triang(laserpixel)
 
-    #Removes non registered pixels from the triangulated points
+    #Removes non registered pixels from the triangulated points, 
+    # NB! clean_points are the points we want to use to building a pointcloud
     clean_points = in1d_dot_approach(points,dead_points)
 
     plt.clf()

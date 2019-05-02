@@ -190,7 +190,6 @@ def handEye(A,B):
     
     return X
 
-    
 A = [A_1,A_2]
 B = [B_1,B_2]
 X_est = handEye(A,B)
