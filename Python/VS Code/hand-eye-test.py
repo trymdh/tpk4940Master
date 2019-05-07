@@ -171,8 +171,12 @@ def handEye(A,B):
     H = Kb@Ka.T
     u,s,vh = np.linalg.svd(H)
     v = vh.conj().T
+    S = np.eye(3)
+    S[2,2] = np.linalg.det(v@u.T)
+    print(S)
 
-    R = v@u.T
+    R = v@S@u.T
+    
     C = []; d = []
     for i in range(0,n):
         C.append(A[i][0:3,0:3] - np.eye(3))
