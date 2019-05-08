@@ -46,6 +46,7 @@ else:
 if cam.cx_getParam(hDev,"CameraMode")[1] != "Image":
     imageConfig(hDev)
     time.sleep(5)
+
     if laserImageList == []:
         save_name = laserimage_folder + "/1.png"
         image = snap(hDev)
