@@ -15,7 +15,7 @@ number_of_laserfiles = len(laser_npy)
 
 ext_points = extractPoints(laser_npy,rMats,tvecs,K,dist)
 ite = 0
-n = 100
+n = 5
 ransac_error_list = []
 ls_error_list = []
 while ite < n:
@@ -31,7 +31,7 @@ while ite < n:
     error_LS = error_checker(-ls_plane,ext_points)
 
     #Ransac Plane
-    ransac_fit,c,ransac_error = ransacPlane(ext_points1)
+    ransac_fit,c,ransac_error = ransacXn(ext_points1,10)
     
     ransac_error_list.append(ransac_error)
     ls_error_list.append(error_LS)
@@ -46,7 +46,7 @@ plt.ylabel("Mean Error")
 plt.show()
 
 
-"""
+
 #plot the points and the planes
 ext_points = ext_points[::100]
 x = ext_points[:,0]
@@ -61,4 +61,3 @@ ax.plot_wireframe(X_r,Y_r,Z_r, color='g')
 X_ls,Y_ls,Z_ls = getPlaneData(ls_plane,ax)
 ax.plot_wireframe(X_ls,Y_ls,Z_ls, color='r')
 plt.show()
-"""

@@ -498,8 +498,10 @@ def loadCaliParam():
     return ret,mtx,tvecs,rMats,dist
 
 def extractPoints(laser_npy,rMats,tvecs,K,distCoeff):
+    #This function returns the 3D world coordinates of the laser image points.
     K_inv = np.linalg.inv(K)
     ext_points = np.array([])
+    l_0 = np.array([0,0,0])
     j = 0
     for i in range(1,len(laser_npy) + 1):
         RotM = rMats[j]
@@ -509,23 +511,22 @@ def extractPoints(laser_npy,rMats,tvecs,K,distCoeff):
         T[0:3,3] = tVec
         n = RotM[2,:]
         p_0 = tVec
-        l_0 = np.array([0,0,0])
         fname = 'pixcoord_' + str(i) + '.npy'
         pix_coord = np.load(fname)
 
         for coord in pix_coord:
             if coord[1] != 0:
                 coord = coord.reshape(-2,1,2)
-                coord = cv2.undistortPoints(coord,K,distCoeff).reshape(-1,2)
-                coord = np.append(coord,1)
-                img_coord = K_inv@coord
+                undist_coord = cv2.undistortPoints(coord,K,distCoeff).reshape(-1,2)
+                undist_coord = np.append(undist_coord,1)
+                img_coord = K_inv@undist_coord
                 norm_img_coord = img_coord/img_coord[2]
                 l = norm_img_coord
                 num = np.dot((p_0 - l_0), n)
                 deno = np.dot(l,n)
                 d = num/deno
-                fullcoord = np.array([norm_img_coord * d]) + l_0
-                ext_points = np.append(ext_points,fullcoord)
+                coord3D = np.array([norm_img_coord * d]) + l_0
+                ext_points = np.append(ext_points,coord3D)
         j = j + 1
     ext_points = np.reshape(ext_points,(-1,3))
     return ext_points
@@ -702,7 +703,7 @@ def ransacXn(pointCloud,n):
             bestPlane,bestPlane_s = planeify(bestFit)
             bestErr = err
             print("BestError: {0}".format(bestErr))
-            np.save('C:/Users/trymdh.WIN-NTNU-NO/OneDrive/tpk4940Master/Python/VS Code/BestRansacPlane.npy',bestFit)
+            #np.save('C:/Users/trymdh.WIN-NTNU-NO/OneDrive/tpk4940Master/Python/VS Code/BestRansacPlane.npy',bestFit)
     return bestPlane,c,bestErr
 
 def homogenify(G):
