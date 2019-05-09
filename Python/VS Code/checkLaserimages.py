@@ -12,10 +12,10 @@ def cleanUpLaser(unclean_laserpixel):
         clean_laser.append(point)
     return np.asarray(clean_laser)
 
-laserimage_folder = "C:/Users/TrymAsus/OneDrive/tpk4940Master/NewLaserImages"
+laserimage_folder = "C:/Users/trymdh.WIN-NTNU-NO/OneDrive/tpk4940Master/NewLaserImages"
 os.chdir(laserimage_folder)
 
-laserpixel = np.load("pixcoord_2.npy")
+laserpixel = np.load("pixcoord_3.npy")
 #clean_laserpixel = cleanUpLaser(laserpixel)
 
 plt.xlim(0,2048)
@@ -25,7 +25,7 @@ plt.plot(laserpixel[:,1],'r')
 plt.show()
 
 #plot the points on the image to check if the laserline is found
-img = cv.imread("2.png")
+img = cv.imread("3.png")
 for i in laserpixel:
     cx,cy = i
     if cy != 0:
