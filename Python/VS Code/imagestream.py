@@ -6,11 +6,15 @@ import cv2 as cv
 #Find and configure the device
 hDev = getDevice()
 imageConfig(hDev)
-
-for i in range(0,1000):
+Pressed = True
+while Pressed:
     if msvcrt.kbhit():
         key = str(msvcrt.getch()).replace("b'","").replace("'","")
         if key == 'q':
+            if cam.cx_getParam(hDev,"CameraMode")[1] != "CenterOfGravity":
+                    cogConfig(hDev)
+            Pressed = False
+            plt.close()
             print("Loop exited")
             break
     #Snap an image of the scene in COG mode.
@@ -25,4 +29,4 @@ for i in range(0,1000):
     plt.clf()
     plt.ion()
     axes_img = plt.imshow(img.data, vmin = img_mean - 3*img_std, vmax = img_mean + 3*img_std, cmap = "gray")
-    plt.pause(1/100)
+    plt.pause(1/60)

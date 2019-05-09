@@ -71,7 +71,8 @@ def snap(hDev):
     #copy the image data into a numpy array
     image = np.copy(img.data)
 
-    # 6. Queue back the buffer. From now on the img.data is not valid anymore and might be overwritten with new image data at any time!
+    # 6. Queue back the buffer. 
+    #From now on the img.data is not valid anymore and might be overwritten with new image data at any time!
     result = cam.cx_queueBuffer(hBuffer)
     if result != base.CX_STATUS_OK:
         print("cx_queueBuffer returned error %d" % (result))
@@ -206,7 +207,7 @@ def cogConfig(hDev):
     cam.cx_setParam(hDev,"AoiSelector", 1)
     cam.cx_setParam(hDev,"AoiHeight", 1088)
     cam.cx_setParam(hDev,"AoiOffsetY", 0)
-    cam.cx_setParam(hDev,"AoiThreshold", 120)
+    cam.cx_setParam(hDev,"AoiThreshold", 240)
     cam.cx_setParam(hDev,"NumAOIs", 1)
     cam.cx_setParam(hDev,"SequencerMode", 0)
     cam.cx_setParam(hDev,"ProfileTriggerMode", 0)
@@ -457,16 +458,9 @@ def loadCaliParam():
     obtained from Matlab into numpy arrays
     """
     #path to the folder where the parameters are saved
-    
-    #Old calibration files
-    caliParam_folder = "C:/Users/trymdh.WIN-NTNU-NO/OneDrive/tpk4940Master/Matlab" #work pc
-    #caliParam_folder = "C:/Users/Trym/OneDrive/tpk4940Master/Matlab" # home pc
-    #caliParam_folder = "C:/Users/TrymAsus/OneDrive/tpk4940Master/Matlab" #LAPTOP
-    
-    #New calibration files:
-    #caliParam_folder = "C:/Users/trymdh.WIN-NTNU-NO/OneDrive/tpk4940Master/Espen Code/Matlab"
-    #caliParam_folder = "C:/Users/TrymAsus/OneDrive/tpk4940Master/Espen Code/Matlab" #LAPTOP
-    #caliParam_folder = "C:/Users/Trym/OneDrive/tpk4940Master/Espen Code/Matlab" # home pc
+    uname = os.getlogin()
+    caliParam_folder = "C:/Users/" + str(uname) + "/trymdh.WIN-NTNU-NO/OneDrive/tpk4940Master/Matlab" #Old calibration files
+    #caliParam_folder = "C:/Users/" + str(uname) + "/trymdh.WIN-NTNU-NO/OneDrive/tpk4940Master/Espen Code/Matlab" #New calibration files:
     os.chdir(caliParam_folder)
 
     #Mean Reprojection Error
@@ -496,6 +490,15 @@ def loadCaliParam():
     dist = np.asarray(dist).reshape(1,4)
 
     return ret,mtx,tvecs,rMats,dist
+
+def cleanUpLaser(laserpixel):
+    #sets points that are 0 to None, this way they are not plotted by matplotlib
+    clean_laser = []
+    for point in laserpixel:
+        if point[1] == 0:
+            point[1] = None
+        clean_laser.append(point)
+    return np.asarray(clean_laser)
 
 def extractPoints(laser_npy,rMats,tvecs,K,distCoeff):
     #This function returns the 3D world coordinates of the laser image points.
