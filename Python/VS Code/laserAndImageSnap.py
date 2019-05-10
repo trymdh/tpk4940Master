@@ -11,7 +11,6 @@ import glob
 hDev = getDevice()
 cogConfig(hDev)
 
-#Create a folder where the images and COG images are saved
 wd = getCurrentWD()
 laserimage_folder = wd + "/NewLaserImages"
 if not os.path.exists(laserimage_folder): 
@@ -46,6 +45,7 @@ else:
 #Snap an image in image mode and save it
 if cam.cx_getParam(hDev,"CameraMode")[1] != "Image":
     imageConfig(hDev)
+    time.sleep(5)
 
     if laserImageList == []:
         save_name = laserimage_folder + "/1.png"
@@ -66,29 +66,6 @@ if cam.cx_getParam(hDev,"CameraMode")[1] != "Image":
             save_name = laserimage_folder + "/" + str(n) + ".png"
             cv2.imwrite(save_name, img)
             n = n + 1
-
+            
     if cam.cx_getParam(hDev,"CameraMode")[1] != "CenterOfGravity":
         cogConfig(hDev)
-
-
-#VISUALY CHECK THE IMAGE IF THE CORRECT POINTS ARE FOUND
-uname = os.getlogin()
-laserimage_folder = "C:/Users/" + str(uname) + "/OneDrive/tpk4940Master/NewLaserImages"
-os.chdir(laserimage_folder)
-
-Ls = sortList(glob.glob(os.getcwd().replace("\\","/") + "/*.npy")) 
-laserimage = cleanUpLaser(np.load(Ls[int(len(Ls)) - 1]))
-fname_img = str(int(len(Ls))) + ".png"
-img = cv2.imread(fname_img)
-#plot the points on the image to check if the laserline is found
-for i in laserimage:
-    cx,cy = i
-    if np.isnan(cy):
-        #cv2 can't plot points with NAN coordinates
-        cy = 0
-    elif cy != 0: 
-        #only want to plot the found points, i.e the points that are not 0
-        cv2.circle(img,(int(cx),int(cy)),1,(0,0,255))
-
-cv2.imshow("img", img)
-cv2.waitKey()
