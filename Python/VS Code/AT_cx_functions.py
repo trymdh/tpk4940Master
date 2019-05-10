@@ -454,13 +454,11 @@ def pixCoordify(laser,width):
 
 def loadCaliParam():
     """
-    This functions loads the camera calibration parameters
-    obtained from Matlab into numpy arrays
+    This functions loads the camera calibration parameters obtained from Matlab into numpy arrays
     """
     #path to the folder where the parameters are saved
     uname = os.getlogin()
-    caliParam_folder = "C:/Users/" + str(uname) + "/trymdh.WIN-NTNU-NO/OneDrive/tpk4940Master/Matlab" #Old calibration files
-    #caliParam_folder = "C:/Users/" + str(uname) + "/trymdh.WIN-NTNU-NO/OneDrive/tpk4940Master/Espen Code/Matlab" #New calibration files:
+    caliParam_folder = "C:/Users/" + str(uname) + "OneDrive/tpk4940Master/Camera calibration May/Calibration parameters"
     os.chdir(caliParam_folder)
 
     #Mean Reprojection Error
@@ -468,7 +466,6 @@ def loadCaliParam():
    
     #The Intrisinc Matrix
     mtx = np.loadtxt('IntrinsicMatrix.txt') #Old
-    #mtx = np.loadtxt('./CalibrationConstants/calibratedCameraMatrix.txt') #New
     
     #Rotation Matrices and translation vectors between the scene and the camera
     tvecs = np.loadtxt('TranslationVectors.txt')
@@ -480,11 +477,8 @@ def loadCaliParam():
     
     #Radial and tangential distortion coeffecients, dist = [k_1,k_2,p_1,p_2[,k_3[,k_4,k_5,k_6]]]
     dist = []
-    #rDist = np.loadtxt('./CalibrationConstants/calibratedRaddist.txt') #k_1 and k_2, => k_3 = 0, this leads to dist = [k_1,k_2,p_1,p_2]
-    rDist = np.loadtxt('RadialDistortion.txt')
-    #tDist = np.loadtxt('./CalibrationConstants/calibratedTangdist.txt') #p_1 and p_2
+    rDist = np.loadtxt('RadialDistortion.txt') #k_1 and k_2, => k_3 = 0, this leads to dist = [k_1,k_2,p_1,p_2]
     tDist = np.loadtxt('TangentialDistortion.txt') #p_1 and p_2
-    
     dist.append(rDist)
     dist.append(tDist)
     dist = np.asarray(dist).reshape(1,4)
