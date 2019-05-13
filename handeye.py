@@ -89,12 +89,13 @@ def handEye(A,B):
     t1 = np.linalg.inv(C.T@C)
     t2 = C.T@d
     t = t1@t2
-
     X = np.eye(4)
     X[0:3,0:3] = R ; X[0:3,3] = t.ravel()
     return X
 
 uname = os.getlogin()
+if uname == "trymdh":
+    uname = uname + ".WIN-NTNU-NO"
 B_folder_path = "C:/Users/" + str(uname) + "/OneDrive/tpk4940Master/Camera calibration May/Calibration parameters"
 A_folder_path = "C:/Users/" + str(uname) + "/OneDrive/tpk4940Master/Camera calibration May/EndEffectorPositions/T_pose"
 
@@ -111,38 +112,85 @@ os.chdir(B_folder_path)
 ts = np.loadtxt("TranslationVectors.txt")
 Rs = np.loadtxt("RotationMatrices.txt")
 Rs = Rs.reshape(int(Rs.shape[0]/3),3,3) #RotationMatrices.txt needs to be reshaped from (#,3) into (#/3,3,3) 
-
+print(ts)
 Ts_CW = []
 for i in range(0,len(ts)):
     T = np.eye(4)
     T[0:3,0:3] = Rs[i]
     T[0:3,3] = ts[i]
-    Ts_CW.append(T)
+    Ts_CW.append(np.linalg.inv(T))
 Ts_CW = np.asarray(Ts_CW) # This matrix containts T_CW matrixes for 18 different poses
 
-#The B matrix must contain at least 2 different pairs of poses, it is critical to remember the combination of poses
-
-#Generate 4 random numbers:
-pose_index = random.sample(range(0,18),4)
-
-A_1a = Ts_OE[pose_index[0]]
-B_1a = Ts_CW[pose_index[0]]
-A_1b = Ts_OE[pose_index[1]]
-B_1b = Ts_CW[pose_index[1]]
-
-A_2a = Ts_OE[pose_index[2]]
-B_2a = Ts_CW[pose_index[2]]
-A_2b = Ts_OE[pose_index[3]]
-B_2b = Ts_CW[pose_index[3]]
-
-A_1 = np.linalg.inv(A_1b)@A_1a
-A_2 = np.linalg.inv(A_2b)@A_2a
-
-B_1 = B_1b@np.linalg.inv(B_1a)
-B_2 = B_2b@np.linalg.inv(B_2a)
-
-A = [A_1, A_2]
-B = [B_1, B_2]
+A = []
+B = []
+n = 100
+for i in range(0,len(Ts_OE)):
+    if len(A) == n:
+        break
+    for j in range(0,len(Ts_OE)):
+        if j != i:
+            if len(A) == n:
+                break
+            A_a = Ts_OE[i]
+            A_b = np.linalg.inv(Ts_OE[j])
+            B_a = np.linalg.inv(Ts_CW[i])
+            B_b = Ts_CW[j]
+            A.append(A_b@A_a)
+            B.append(B_b@B_a)
 
 X = handEye(A,B)
 print(X)
+R_e = []
+t_e = []
+for i in range(0,len(A)):
+    R_e.append(np.linalg.norm((A[i]@X - X@B[i])[0:3,0:3]))
+    t_e.append(np.linalg.norm((A[i]@X - X@B[i])[0:3,3]))
+print("Mean error in rotation: {0}".format(np.mean(R_e)))
+print("Mean error in translation: {0}".format(np.mean(t_e)))
+
+  
+from numpy import dot, eye, zeros, outer
+from numpy.linalg import inv
+
+def log(R):
+    # Rotation matrix logarithm
+    theta = np.arccos((R[0,0] + R[1,1] + R[2,2] - 1.0)/2.0)
+    return np.array([R[2,1] - R[1,2], R[0,2] - R[2,0], R[1,0] - R[0,1]]) / (2*np.sin(theta))
+
+def invsqrt(mat):
+    u,s,v = np.linalg.svd(mat)
+    return u.dot(np.diag(1.0/np.sqrt(s))).dot(v)
+
+def calibrate(A, B):
+    #transform pairs A_i, B_i
+    N = len(A)
+    M = np.zeros((3,3))
+    for i in range(N):
+        Ra, Rb = A[i][0:3, 0:3], B[i][0:3, 0:3]
+        M += outer(log(Rb), log(Ra))
+
+    Rx = dot(invsqrt(dot(M.T, M)), M.T)
+
+    C = zeros((3*N, 3))
+    d = zeros((3*N, 1))
+    for i in range(N):
+        Ra,ta = A[i][0:3, 0:3], A[i][0:3, 3]
+        Rb,tb = B[i][0:3, 0:3], B[i][0:3, 3]
+        C[3*i:3*i+3, :] = eye(3) - Ra
+        d[3*i:3*i+3, 0] = ta - dot(Rx, tb)
+
+    tx = dot(inv(dot(C.T, C)), dot(C.T, d))
+    return Rx, tx.flatten()
+
+R, t = calibrate(A,B)
+X1 = np.eye(4)
+X1[0:3,0:3] = R
+X1[0:3,3] = t
+print(X1)
+R_e = []
+t_e = []
+for i in range(0,len(A)):
+    R_e.append(np.linalg.norm((A[i]@X1 - X1@B[i])[0:3,0:3]))
+    t_e.append(np.linalg.norm((A[i]@X1 - X1@B[i])[0:3,3]))
+print("Mean error in rotation: {0}".format(np.mean(R_e)))
+print("Mean error in translation: {0}".format(np.mean(t_e)))

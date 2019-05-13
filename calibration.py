@@ -200,6 +200,57 @@ def getPlaneData(pI,ax):
 
     return X,Y,Z
 
+def lsPlane(pointCloud):
+    """
+    Code below is based on the user "BEN" from 
+    https://stackoverflow.com/questions/1400213/3d-least-squares-plane
+    """
+    # A * x_fit = b => 
+    # (ax + by + d = -z)
+    # where A = [[x1 y1 1], 
+    #            [x2 y2 1],
+    #               ...   ,
+    #            [xn yn 1]]
+    # b = [-z1, -z2, ... , -zn].T
+    # and x_fit = [a b d]
+
+    x = pointCloud[:,0]
+    y = pointCloud[:,1]
+    z = pointCloud[:,2]
+    c = getCentroid3D(pointCloud)
+
+    A = []
+    b = []
+    for i in range(len(x)):
+        A.append([x[i], y[i], 1])
+        b.append(z[i])
+    A = np.matrix(A)
+    b = np.matrix(b).T
+
+    fit = (A.T @ A).I @ A.T @ b 
+    #error = vertical offset between point and plane
+    #error = z_i - z_proj
+    error = b - A @ fit
+
+    #planenormal is then
+    v1 = np.array([1,0,fit[0]])
+    v2 = np.array([0,1,fit[1]])
+    
+    n = np.cross(v1,v2)
+    n /= np.linalg.norm(n)
+
+    return np.append(n,c)
+
+def planeify(vector_plane): #Assumes form [a,b,c,x_0,y_0,z_0]
+    #a*x_0 + b*y_0 + c*z_0 + d = 0
+    #-> d = - (a*x_0 + b*y_0 + c*z_0)
+    D = -(vector_plane[0]*(vector_plane[3])+vector_plane[1]*(vector_plane[4])+vector_plane[2]*(vector_plane[5]))
+    #[A,B,C,D]
+    plane = np.asarray([vector_plane[0],vector_plane[1],vector_plane[2],D])
+    #Or on form [Ax + By + D] = z
+    plane_s = np.asarray([-plane[0]/plane[2],-plane[1]/plane[2],-plane[3]/plane[2]])
+    return plane,plane_s
+
 
 #get the system username, usefull when working on different computers...
 uname = os.getlogin()
@@ -210,8 +261,13 @@ K_inv = np.linalg.inv(K)
 
 pointCloud = LaserPointsCloud(uname,K,dist)
 
+#LS Plane 
+ls_fit = lsPlane(pointCloud)
+ls_plane,ls_plane_s = planeify(ls_fit)
+error_LS = error_checker(-ls_plane,pointCloud)
 bestFit,c,bestErr = ransacPlane(pointCloud)
 print("Ransac plane: {0} \nError: {1}".format(bestFit,bestErr))
+print("LS plane: {0} \nError: {1}".format(-ls_plane,error_LS))
 
 #plot laser points
 pointCloud = pointCloud[::50]
@@ -224,5 +280,7 @@ plt.figure(1)
 ax = plt.subplot(111, projection ='3d')
 ax.scatter(x, y, z, color ='b')
 X_r,Y_r,Z_r = getPlaneData(bestFit,ax)
-ax.plot_wireframe(X_r,Y_r,Z_r, color='g', alpha = 0.5)
+ax.plot_wireframe(X_r,Y_r,Z_r, color='g', alpha = 1)
+X_ls,Y_ls,Z_ls = getPlaneData(ls_plane,ax)
+ax.plot_wireframe(X_ls,Y_ls,Z_ls, color='b', alpha = 0.2)
 plt.show()

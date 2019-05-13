@@ -194,5 +194,12 @@ def handEye(A,B):
 
 A = [A_1,A_2]
 B = [B_1,B_2]
-X_est = handEye(A,B)
-print(X_est)
+X1 = handEye(A,B)
+print(len(A))
+R_e = []
+t_e = []
+for i in range(0,len(A)):
+    R_e.append(np.linalg.norm((A[i]@X1 - X1@B[i])[0:3,0:3]))
+    t_e.append(np.linalg.norm((A[i]@X1 - X1@B[i])[0:3,3]))
+print("Mean error in rotation: {0}".format(np.mean(R_e)))
+print("Mean error in translation: {0}".format(np.mean(t_e)))
