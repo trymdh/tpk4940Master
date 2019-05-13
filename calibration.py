@@ -214,7 +214,7 @@ bestFit,c,bestErr = ransacPlane(pointCloud)
 print("Ransac plane: {0} \nError: {1}".format(bestFit,bestErr))
 
 #plot laser points
-ext_points = ext_points[::50]
+pointCloud = pointCloud[::50]
 x = pointCloud[:,0]
 y = pointCloud[:,1]
 z = pointCloud[:,2]

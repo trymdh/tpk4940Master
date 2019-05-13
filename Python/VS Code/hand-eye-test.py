@@ -140,7 +140,7 @@ print(X)
 #hand-eye calibration:
 def handEye(A,B):
     """
-    Set of transforms between the work space and the robot end effector:
+    Set of transforms between the robot base and the robot end effector:
     A = [A1,A2,..,An]
     Set of transforms between between work space and camera frame:
     B = [B1,B2,...,Bn]
@@ -173,7 +173,6 @@ def handEye(A,B):
     v = vh.conj().T
     S = np.eye(3)
     S[2,2] = np.linalg.det(v@u.T)
-    print(S)
 
     R = v@S@u.T
     
@@ -191,7 +190,6 @@ def handEye(A,B):
 
     X = np.eye(4)
     X[0:3,0:3] = R ; X[0:3,3] = t.ravel()
-    
     return X
 
 A = [A_1,A_2]
