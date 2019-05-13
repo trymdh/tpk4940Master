@@ -3,6 +3,7 @@ import re
 import random
 import numpy as np
 import glob
+np.set_printoptions(suppress=True)
 
 def sortList(unsortedList):
     #sort a list in alphanumeric order
