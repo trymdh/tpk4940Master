@@ -37,7 +37,7 @@ T_OW = T_OE@T_EC@T_CW
 
 ---------------------------------------------------------------------
 #One pair where q_1a != q_1b
-Transform between the world origin and the robot end effector:
+Transform between the base and the robot end effector:
 A_1a = T_OE_1a #Pose at joint vector q_1a
 A_1b = T_OE_1b #Pose at joint vector q_1b
 

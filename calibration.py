@@ -2,6 +2,7 @@ import re
 import os
 import glob
 import cv2
+import msvcrt
 import numpy as np
 from matplotlib import pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
@@ -68,9 +69,14 @@ def LaserPointsCloud(uname,K,dist):
     ext_points = []
     l_0 = np.array([0,0,0])
     j = 0
+    cnt = 0
     for pix in laserImgs:
         pix = pix.reshape(-2,1,2)
         for pxls in pix:
+            if pxls[0][1] == 0:
+                cnt +=1
+                #print(pxls)
+            #only calculate the "found" laser points, i.e point that dont have zero px_y coordinate.
             if pxls[0][1] != 0:
                 pxls = pxls[0].reshape(-2,1,2)
                 R = R_mats[j]
@@ -90,6 +96,7 @@ def LaserPointsCloud(uname,K,dist):
                     coord3D = np.array([l * d]) + l_0
                     ext_points.append(coord3D)
         j += 1
+    #print(cnt)
     return np.asarray(ext_points).reshape(-1,3)
 
 def ransacPlane(pointCloud):
@@ -126,6 +133,31 @@ def ransacPlane(pointCloud):
                 centroid = c
         ite += 1
     return bestFit,centroid,bestErr
+
+def ransacXn(uname,pointCloud,n):
+    if str(uname) == "trymdh":
+        uname = uname + ".WIN-NTNU-NO"
+    bestfit_folder = "C:/Users/" + str(uname) + "/OneDrive/tpk4940Master"
+    os.chdir(bestfit_folder)
+    #Running the ransac function n-times and return the best fit if the error is smaller than the "best-fit-to-date" error.
+    bestFit = np.load('BestRansacPlane.npy')
+    bestPlane,bestPlane_s = planeify(bestFit)
+    bestErr = error_checker(bestPlane,pointCloud)
+    for i in range(0,n):
+        if msvcrt.kbhit():
+            key = str(msvcrt.getch()).replace("b'","").replace("'","")
+            if key == 'q':
+                print("Loop exited")
+                break
+        ransac_fit,c,err = ransacPlane(pointCloud)
+        print("Current error is:{0} \t Best error is: {1}".format(err,bestErr))
+        if err < bestErr:
+            bestFit = np.append(ransac_fit[0:3],c)
+            bestPlane,bestPlane_s = planeify(bestFit)
+            bestErr = err
+            print("BestError changed to: {0}".format(bestErr))
+            np.save('BestRansacPlane.npy',bestFit)
+    return bestPlane,c,bestErr
 
 def countInliers(error_vec, median_error,error_std,pointCloud):
     i = 0
@@ -251,21 +283,20 @@ def planeify(vector_plane): #Assumes form [a,b,c,x_0,y_0,z_0]
     plane_s = np.asarray([-plane[0]/plane[2],-plane[1]/plane[2],-plane[3]/plane[2]])
     return plane,plane_s
 
-
 #get the system username, usefull when working on different computers...
 uname = os.getlogin()
-
+wd = os.getcwd()
 #Load camera parameters
 ret,K,t_vecs,R_mats,dist = loadCaliParam(uname)
 K_inv = np.linalg.inv(K)
 
 pointCloud = LaserPointsCloud(uname,K,dist)
-
 #LS Plane 
 ls_fit = lsPlane(pointCloud)
 ls_plane,ls_plane_s = planeify(ls_fit)
 error_LS = error_checker(-ls_plane,pointCloud)
-bestFit,c,bestErr = ransacPlane(pointCloud)
+bestFit,c,bestErr = ransacXn(uname,pointCloud,10)
+
 print("Ransac plane: {0} \nError: {1}".format(bestFit,bestErr))
 print("LS plane: {0} \nError: {1}".format(-ls_plane,error_LS))
 
@@ -278,9 +309,12 @@ z = pointCloud[:,2]
 #plot ransac plane
 plt.figure(1)
 ax = plt.subplot(111, projection ='3d')
+ax.set_xlabel('x')
+ax.set_ylabel('y')
+ax.set_zlabel('z')
 ax.scatter(x, y, z, color ='b')
 X_r,Y_r,Z_r = getPlaneData(bestFit,ax)
-ax.plot_wireframe(X_r,Y_r,Z_r, color='g', alpha = 1)
+#ax.plot_wireframe(X_r,Y_r,Z_r, color='g', alpha = 1)
 X_ls,Y_ls,Z_ls = getPlaneData(ls_plane,ax)
-ax.plot_wireframe(X_ls,Y_ls,Z_ls, color='b', alpha = 0.2)
+ax.plot_wireframe(X_ls,Y_ls,Z_ls, color='r', alpha = 1)
 plt.show()

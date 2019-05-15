@@ -7,13 +7,14 @@ import cx.cx_base as base
 from AT_cx_functions import *
 import glob
 
-wd = getCurrentWD()
-laserimage_folder = wd + "/laserimage"
-os.chdir(laserimage_folder)
+uname = getUname()
+
+image_folder = "C:/Users/"+ str(uname) + "/OneDrive/tpk4940Master/Camera calibration May/Images"
+os.chdir(image_folder)
 
 #image_paths contains the paths to all the images in the calibration folder
 image_paths = os.getcwd().replace("\\","/") + "/*.png"
-image_paths = glob.glob(image_paths)
+image_paths = sortList(glob.glob(image_paths))
 
 calibration = 1 #1 = Calibrate camera, 0 = do nothing
 if calibration == 1: 
@@ -51,3 +52,6 @@ if calibration == 1:
     #rvecs =  the rotation vectors (one per image)
     #tvecs =  the translation vectors (one per image)
     ret,mtx,dist,rvecs,tvecs = cv2.calibrateCamera(objpoints,imgpoints,gray.shape[::-1],None,None)
+
+    print(len(tvecs))
+    print("\n \n {0}".format(rvecs))

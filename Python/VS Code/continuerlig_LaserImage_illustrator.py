@@ -19,7 +19,6 @@ def triang(pix):
     #Define lasernormal and laserpoint
     ln = laser[0:3]
     lp = laser[3:6]
-
     l_0 = np.array([0,0,0])
 
     for coord in undistorted_pixels:

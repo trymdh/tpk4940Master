@@ -385,6 +385,11 @@ def checkStatusCode(code):
 
 #OTHER
 #-----------------------------------------------------------------------------------------------------------------------------------
+def getUname():
+    uname = os.getlogin()
+    if uname == "trymdh":
+        uname = uname + ".WIN-NTNU-NO"
+    return uname
 def sortList(unsortedList):
     #sort a list in alphanumeric order
     convert = lambda text: int(text) if text.isdigit() else text.lower()
@@ -412,7 +417,7 @@ class Chessboard:
         #chessboard dimensions
         self.cbrow = 6
         self.cbcol = 10
-        self.sqrsize = 30 #mm
+        self.sqrsize = 20 #mm
         #termination criteria
         self.criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, self.sqrsize, 0.001)
         self.objp = np.zeros((self.cbrow*self.cbcol,3),np.float32)
