@@ -139,9 +139,9 @@ def get_A_B(n):
     return A,B
 n = 100
 A,B = get_A_B(n)
-X = handEye(A,B)
+X = handEye(A,B) 
 print(X)
-
+np.save("X.npy",X)
 
 """
 R_e = []
