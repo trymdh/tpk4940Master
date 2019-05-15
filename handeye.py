@@ -139,11 +139,9 @@ def get_A_B(n):
     return A,B
 n = 100
 A,B = get_A_B(n)
-X = handEye(A,B) 
+X = handEye(A,B)
 print(X)
-np.save("X.npy",X)
 
-"""
 R_e = []
 t_e = []
 for i in range(0,len(A)):
@@ -153,6 +151,6 @@ for i in range(0,len(A)):
     t_b = (X@B[i])[0:3,3]
     R_e.append(np.linalg.norm(R_a@R_b.T - np.eye(3)))
     t_e.append(np.linalg.norm(t_a - t_b))
+    
 print("Mean error in rotation: {0}".format(np.mean(R_e)))
 print("Mean error in translation: {0}".format(np.mean(t_e)))
-"""
