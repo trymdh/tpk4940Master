@@ -462,8 +462,8 @@ def loadCaliParam():
     This functions loads the camera calibration parameters obtained from Matlab into numpy arrays
     """
     #path to the folder where the parameters are saved
-    uname = os.getlogin()
-    caliParam_folder = "C:/Users/" + str(uname) + "OneDrive/tpk4940Master/Camera calibration May/Calibration parameters"
+    uname = getUname()
+    caliParam_folder = "C:/Users/" + str(uname) + "/OneDrive/tpk4940Master/Camera calibration May/Calibration parameters"
     os.chdir(caliParam_folder)
 
     #Mean Reprojection Error

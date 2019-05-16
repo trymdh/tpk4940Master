@@ -64,6 +64,10 @@ def triang(pix):
 
     return np.reshape(ext_points,(-1,3))
 
+
+
+
+"""
 def in1d_dot_approach(A,B):
     cumdims = (np.maximum(A.max(),B.max())+1)**np.arange(B.shape[1])
     return A[~np.in1d(A.dot(cumdims),B.dot(cumdims))]
@@ -117,4 +121,4 @@ for i in range(0,1000):
     ax.set_xlim3d(min(X),max(X))
     ax.scatter3D(X,Y,Z)
     plt.pause(1/60)
-    
+    """

@@ -139,8 +139,8 @@ def get_A_B(n):
     return A,B
 n = 100
 A,B = get_A_B(n)
-X = handEye(A,B)
-print(X)
+X = handEye(A,B)#Transform from end effector to camera frame
+print(np.around(X,decimals=1))
 
 R_e = []
 t_e = []
@@ -150,7 +150,7 @@ for i in range(0,len(A)):
     t_a = (A[i]@X)[0:3,3]
     t_b = (X@B[i])[0:3,3]
     R_e.append(np.linalg.norm(R_a@R_b.T - np.eye(3)))
-    t_e.append(np.linalg.norm(t_a - t_b))
+    t_e.append(np.linalg.norm(t_a- t_b))
     
 print("Mean error in rotation: {0}".format(np.mean(R_e)))
 print("Mean error in translation: {0}".format(np.mean(t_e)))
