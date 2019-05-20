@@ -10,7 +10,8 @@ n = 1
 for i in range(0,18):
     R = rMats[n-1]
     t = tvecs[n-1]
-    print(t[2])
+    N = R[2,:]
+    l_0 = np.array([0,0,0])
     #VISUALY CHECK THE IMAGE IF THE CORRECT POINTS ARE FOUND
     uname = os.getlogin()
     if uname == "trymdh":
@@ -19,10 +20,16 @@ for i in range(0,18):
     os.chdir(laserimage_folder)
     laserimage = cleanUpLaser(np.load("pixcoord_"+ str(n)+ ".npy"))
     point_3D = []
+    point_3D_old = []
     for pix in laserimage:
         norm_img_coord = cv2.undistortPoints(pix.reshape(-2,1,2),K,dist)
+        norm_img_old = np.append(norm_img_coord.reshape(-1,2),1)
+        l = norm_img_old/np.linalg.norm(norm_img_old)
+        d = np.dot((t - l_0),N)/np.dot(l,N)
+        point_3D_old.append(np.array([l * d]) + l_0)
         point_3D.append(t[2]*np.append(norm_img_coord,1))
-    point_3D = np.asarray(point_3D)
+    #point_3D = np.asarray(point_3D)
+    point_3D = np.asarray(point_3D_old).reshape(-1,3)
     x = point_3D[:,0]
     y = point_3D[:,1]
     z = point_3D[:,2]
