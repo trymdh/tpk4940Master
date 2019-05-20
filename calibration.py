@@ -82,11 +82,9 @@ def LaserPointsCloud(uname,K,dist):
                 R = R_mats[j]
                 t = t_vecs[j]
                 T = np.eye(4)
-                T[0:3,0:3] = R
-                T[0:3,3] = t
-                n = R[2,:] #this might be wrong, if wrong then n = R[:,2]
+                n = R[2,:]
                 p_0 = t
-                undist_pix = cv2.undistortPoints(pxls,K,dist).reshape(-1,2)# undistorted normalized image coordinate
+                undist_pix = cv2.undistortPoints(pxls,K,dist).reshape(-1,2) #undistorted normalized image coordinate
                 for coord in undist_pix:
                     #make the point homogeneous, i.e (x,y,1)
                     norm_img_coord = np.append(coord,1)
@@ -140,7 +138,7 @@ def ransacXn(uname,pointCloud,n):
     bestfit_folder = "C:/Users/" + str(uname) + "/OneDrive/tpk4940Master"
     os.chdir(bestfit_folder)
     #Running the ransac function n-times and return the best fit if the error is smaller than the "best-fit-to-date" error.
-    bestFit = np.load('BestRansacPlane.npy')
+    bestFit = np.load('BestRansacPlane1.npy')
     bestPlane,bestPlane_s = planeify(bestFit)
     bestErr = error_checker(bestPlane,pointCloud)
     for i in range(0,n):

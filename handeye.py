@@ -90,12 +90,9 @@ def handEye(A,B):
 
     C = np.asarray(C).reshape(3*n,3)
     d = np.asarray(d).reshape(3*n,1)
-
     t = np.dot(np.linalg.inv(np.dot(C.T, C)), np.dot(C.T, d))
     
-    X = np.eye(4)
-    X[0:3,0:3] = R ; X[0:3,3] = t.ravel()
-    return X
+    return R,t.ravel()
 
 def get_A_B(n):
     #n is number of pair combinations
@@ -108,19 +105,21 @@ def get_A_B(n):
     T_OE_fnames = sortList(glob.glob(os.getcwd().replace("\\","/") + "/*.npy"))
     Ts_OE = []
     for fname in T_OE_fnames:
-        Ts_OE.append(np.linalg.inv(np.load(fname)))
+        T = np.load(fname)
+        T[0:3,3] = T[0:3,3]*1000
+        Ts_OE.append(T)
+
     Ts_OE = np.asarray(Ts_OE)
 
     #T_CW is the calibration target origin in Camera frame coordinates
     os.chdir(T_CW_path)
     ts = np.loadtxt("TranslationVectors.txt") #The translation of the camera relative to the calibration target
-
     Rs = np.loadtxt("RotationMatrices.txt")
     Rs = Rs.reshape(int(Rs.shape[0]/3),3,3) #RotationMatrices.txt needs to be reshaped from (#,3) into (#/3,3,3) where "#" is the number of images
     Ts_CW = []
     for i in range(0,len(ts)):
         T_CW = np.eye(4)
-        T_CW[0:3,0:3] = Rs[i]
+        T_CW[0:3,0:3] = np.linalg.inv(Rs[i])
         T_CW[0:3,3] = ts[i]
         Ts_CW.append(T_CW)
     Ts_CW = np.asarray(Ts_CW)
@@ -137,20 +136,96 @@ def get_A_B(n):
                 A.append(Ts_OE[j]@np.linalg.inv(Ts_OE[i]))
                 B.append(np.linalg.inv(Ts_CW[j])@Ts_CW[i])
     return A,B
-n = 100
-A,B = get_A_B(n)
-X = handEye(A,B)#Transform from end effector to camera frame
-print(np.around(X,decimals=1))
+    
+def shepperd(R):
+    #Quaternion from rotation matrix using Shepperd's algorithm,
+    #which is stable, does not lose significant precision and uses only one sqrt.
+    #J. Guidance and Control, 1 (1978) 223-224.
+    q = np.transpose(np.zeros(4))
+    z00 = R[0,0] + R[1,1] + R[2,2] # Trace of R
+    z11 = R[0,0] + R[0,0] - z00
+    z22 = R[1,1] + R[1,1] - z00
+    z33 = R[2,2] + R[2,2] - z00
+    #Find a large zii to avoid division by zero
+    if z00 >= 0.5:
+        w = np.sqrt(1.0 + z00)
+        wInv = 1.0/w
+        x = (R[2,1] - R[1,2])*wInv
+        y = (R[0,2] - R[2,0])*wInv
+        z = (R[1,0] - R[0,1])*wInv
+    elif z11 >= 0.5:
+        x = np.sqrt(1.0 + z11)
+        xInv = 1.0/x
+        w = (R[2,1] - R[1,2])*xInv
+        y = (R[1,0] + R[0,1])*xInv
+        z = (R[2,0] + R[0,2])*xInv
+    elif z22 >= 0.5:
+        y = np.sqrt(1.0 + z22)
+        yInv = 1.0/y
+        w = (R[0,2] - R[2,0])*yInv
+        x = (R[1,0] + R[0,1])*yInv
+        z = (R[2,1] + R[1,2])*yInv
+    else:
+        z = np.sqrt(1.0 + z33)
+        zInv = 1.0/z
+        w = (R[1,0] - R[0,1])*zInv
+        x = (R[2,0] + R[0,2])*zInv
+        y = (R[2,1] + R[1,2])*zInv
+    eta = 0.5*w
+    eps = 0.5*np.array([[x],[y],[z]])
+    q[0] = eta
+    q[1:] = np.transpose(eps)
+    return q
 
-R_e = []
+def qprod(q1,q2):
+    eta1 = q1[0] 
+    eps1 = q1[1:] 
+    eta2 = q2[0] 
+    eps2 = q2[1:] 
+    q = np.zeros(4)
+    #formula (217) on page 47 in the notes.
+    q[0] = eta1*eta2 - np.dot(eps1,eps2)
+    q[1:] =  eta1*eps2 + eta2*eps1 + np.cross(eps1,eps2)
+    return q
+
+def qconj(q):
+    q[1:] = -q[1:]
+    return q
+def quat2rot(q):
+    #Takes a quaternion and returns its corresponding rotation matrix
+    n = q[0]
+    e_x,e_y,e_z = q[1],q[2],q[3]
+    R = np.eye(3)
+    R[0,0:3] = np.array([2*(n**2 + e_x**2)-1,2*(e_x*e_y - n*e_z),2*(e_x*e_z + n*e_y)])
+    R[1,0:3] = np.array([2*(e_x*e_y + n*e_z),2*(n**2 + e_y**2)-1,2*(e_y*e_z - n*e_x)])
+    R[2,0:3] = np.array([2*(e_x*e_z - n*e_y),2*(e_y*e_z + n*e_x),2*(n**2 + e_z**2)-1])
+    return R
+
+n = 10
+A,B = get_A_B(n)
+Rx,tx = handEye(A,B)#Transform from end effector to camera frame
+X = np.eye(4)
+X[0:3,0:3],X[0:3,3] = Rx, tx
+print(np.around(X,decimals=2))
+e_angle = []
+e_vec = []
 t_e = []
 for i in range(0,len(A)):
-    R_a = (A[i]@X)[0:3,0:3]
-    R_b = (X@B[i])[0:3,0:3]
-    t_a = (A[i]@X)[0:3,3]
-    t_b = (X@B[i])[0:3,3]
-    R_e.append(np.linalg.norm(R_a@R_b.T - np.eye(3)))
-    t_e.append(np.linalg.norm(t_a- t_b))
-    
-print("Mean error in rotation: {0}".format(np.mean(R_e)))
-print("Mean error in translation: {0}".format(np.mean(t_e)))
+    AX = np.dot(A[i],X)
+    XB = np.dot(X,B[i])
+    R_a,R_b = A[i][0:3,0:3], B[i][0:3,0:3]
+    t_ax = AX[0:3,3]
+    t_xb = XB[0:3,3]
+
+    #calculate the deviation in rotation using quaternions
+    q_a_est = shepperd(Rx@R_b@np.linalg.inv(Rx))
+    q_a = shepperd(R_a)
+    q_e = qprod(qconj(q_a_est),q_a)
+    theta_e = 2*np.arccos(np.linalg.norm(q_e))
+    e_angle.append(theta_e)
+    e_vec.append(q_e[1:])
+    t_e.append(np.linalg.norm(t_ax - t_xb))
+
+print("Mean error in rotation angle is {0} radians
+print(Mean error in rotation axis [{1},{2},{3}]".format(np.mean(e_angle),np.mean(e_vec[0]),np.mean(e_vec[1]),np.mean(e_vec[2])))
+print("Mean error in translation: {0} mm".format(np.mean(t_e)))
