@@ -122,9 +122,9 @@ def get_A_B(n):
     Ts_CW = []
     for i in range(0,len(ts)):
         T_CW = np.eye(4)
-        T_CW[0:3,0:3] = Rs[i]
+        T_CW[0:3,0:3] = np.linalg.inv(Rs[i])
         T_CW[0:3,3] = ts[i]
-        Ts_CW.append(np.linalg.inv(T_CW))
+        Ts_CW.append(T_CW)
     Ts_CW = np.asarray(Ts_CW)
     #k = np.sort(np.random.choice(Ts_CW.shape[0],n,replace = False))
     #print(k)
@@ -134,18 +134,21 @@ def get_A_B(n):
     for i in range(0,n):
         a = i
         b = i + 1
+        print(a,b)
         A.append(np.dot(np.linalg.inv(Ts_OE[b]),Ts_OE[a]))
         B.append(np.dot(Ts_CW[b],np.linalg.inv(Ts_CW[a])))
     return A,B
     
 
-n = 17
+n = 4
 A,B = get_A_B(n)
 Rx,tx = handEye(A,B)#Transform from end effector to camera frame
 X = np.eye(4)
 X[0:3,0:3],X[0:3,3] = Rx, tx
 print(np.around(X,decimals=3))
 
+
+#np.save("X.npy",X)
 e_angle = []
 e_vec = []
 t_e = []
