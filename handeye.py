@@ -110,10 +110,10 @@ def get_A_B(n):
     Ts_OE = []
     for fname in T_OE_fnames:
         T = np.load(fname)
-        T[0:3,3] = T[0:3,3]*1000 #convert from m to mm
+        T[0:3,3] = np.around(T[0:3,3]*1000,decimals = 3) #convert from m to mm
         Ts_OE.append(T)
     Ts_OE = np.asarray(Ts_OE)
-
+    print(Ts_OE)
     #T_CW is the calibration target origin in Camera frame coordinates
     os.chdir(T_CW_path)
     ts = np.loadtxt("TranslationVectors.txt") #The translation of the camera relative to the calibration target
@@ -126,6 +126,7 @@ def get_A_B(n):
         T_CW[0:3,3] = ts[i]
         Ts_CW.append(T_CW)
     Ts_CW = np.asarray(Ts_CW)
+    print(Ts_CW)
     #k = np.sort(np.random.choice(Ts_CW.shape[0],n,replace = False))
     #print(k)
     A = [] 
@@ -144,8 +145,8 @@ n = 4
 A,B = get_A_B(n)
 Rx,tx = handEye(A,B)#Transform from end effector to camera frame
 X = np.eye(4)
-X[0:3,0:3],X[0:3,3] = Rx, tx
-print(np.around(X,decimals=3))
+X[0:3,0:3],X[0:3,3] = np.around(Rx,decimals = 6), np.around(tx,decimals=3)
+print(X)
 
 
 #np.save("X.npy",X)
@@ -165,7 +166,7 @@ for i in range(0,len(A)):
     theta_e = 2*np.arccos(np.linalg.norm(q_e[0]))
     e_angle.append(theta_e)
     e_vec.append(q_e[1:])
-    t_e.append(np.linalg.norm(t_ax - t_xb))
+    t_e.append(np.linalg.norm(t_xb - t_ax))
 
 #print(rotx(pi/2)@roty(pi))
 print("Mean error in rotation angle is {0} radians".format(np.mean(e_angle)))

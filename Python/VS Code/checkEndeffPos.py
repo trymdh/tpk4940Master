@@ -4,8 +4,8 @@ from matplotlib import pyplot as plt
 import os 
 import glob 
 
-username = os.getlogin()
-endEffPosPath = "C:/Users/" + str(username) + "/OneDrive/tpk4940Master/EndEffectorPositions"
+uname = getUname()
+endEffPosPath = "C:/Users/" + str(uname) + "/OneDrive/tpk4940Master/EndeffPos20"
 os.chdir(endEffPosPath)
 Ts = sortList(glob.glob(os.getcwd().replace("\\","/") + "/*.npy"))
 i = 0

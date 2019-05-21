@@ -22,9 +22,8 @@ def sortList(unsortedList):
     return sorted(unsortedList,key = alphanum_key)
     
 uname = getUname()
-
-os.chdir("C:/Users/"+uname + "/Onedrive/tpk4940Master/Camera calibration May/EndEffectorPositions/q_pose")
-q_poses = sortList(glob.glob(os.getcwd().replace("\\","/") + "/*.npy"))
-os.chdir("C:/Users/"+uname + "/Onedrive/tpk4940Master/Camera calibration May/EndEffectorPositions/T_pose") 
-T_poses =  sortList(glob.glob(os.getcwd().replace("\\","/") + "/*.npy"))
-print(T_poses)
+os.chdir("C:/Users/"+uname + "/Onedrive/tpk4940Master")
+plane = np.load("BestRansacPlane.npy")
+print(plane)
+print(10*plane[0:3])
+print(2.7*10**2)
