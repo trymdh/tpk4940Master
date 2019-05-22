@@ -5,7 +5,7 @@ import numpy as np
 import glob
 from matplotlib import pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
-import cv2 as cv2
+import cv2
 
 np.set_printoptions(suppress=True)
 pi = np.pi
@@ -34,9 +34,10 @@ def sortList(unsortedList):
 points = np.load("POOOOOOINTS.npy")
 base_tool = np.load("T.npy")
 base_tool[0:3,3] = base_tool[0:3,3]*1000
+print(base_tool)
 fig = plt.figure(1)
 X = np.load("X.npy")
-Y = np.linalg.inv(np.dot(base_tool,X))
+Y = base_tool@X
 print(Y)
 points_Y = []
 for point in points:
@@ -50,9 +51,7 @@ ax.set_zlabel("Z")
 X = points_Y[:,0]
 Y = points_Y[:,1]
 Z = points_Y[:,2]
-ax.set_zlim3d(0,max(Z))
-ax.set_ylim3d(0,max(Y))
-ax.set_xlim3d(0,max(X))
+#ax.set_aspect("equal")
 print(max(Z)-min(Z))
 ax.scatter3D(X,Y,Z)
 plt.show()

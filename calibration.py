@@ -16,6 +16,11 @@ intrinsic camera calibration done in MATLAB. The parameters are exported to Pyth
 and fed to LaserPointsCloud() which triangulates the laser points and returns a pointcloud
 of all the triangulated laser points.
 """
+def getUname():
+    uname = os.getlogin()
+    if uname == "trymdh":
+        uname = uname + ".WIN-NTNU-NO"
+    return uname
 def sortList(unsortedList):
     #sort a list in alphanumeric order
     convert = lambda text: int(text) if text.isdigit() else text.lower()
@@ -27,8 +32,6 @@ def loadCaliParam(uname):
     This functions loads the camera calibration parameters obtained from Matlab into numpy arrays
     """
     #path to the folder where the parameters are saved
-    if str(uname) == "trymdh":
-        uname = uname + ".WIN-NTNU-NO"
     caliParam_folder = "C:/Users/" + str(uname) + "/OneDrive/tpk4940Master/Camera calibration May/Calibration parameters"
     os.chdir(caliParam_folder)
 
@@ -57,8 +60,6 @@ def loadCaliParam(uname):
     return ret,mtx,tvecs,rMats,dist
 
 def LaserPointsCloud(uname,K,dist):
-    if str(uname) == "trymdh":
-        uname = uname + ".WIN-NTNU-NO"
     os.chdir("C:/Users/" + str(uname) + "/OneDrive/tpk4940Master/Camera calibration May/LaserImages")
     laser_fnames_list = sortList(glob.glob(os.getcwd().replace("\\","/") + "/*.npy"))
     laserImages = []
@@ -282,7 +283,7 @@ def planeify(vector_plane): #Assumes form [a,b,c,x_0,y_0,z_0]
     return plane,plane_s
 
 #get the system username, usefull when working on different computers...
-uname = os.getlogin()
+uname = getUname()
 wd = os.getcwd()
 #Load camera parameters
 ret,K,t_vecs,R_mats,dist = loadCaliParam(uname)
