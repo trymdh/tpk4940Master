@@ -113,7 +113,7 @@ def get_A_B(n):
         T[0:3,3] = np.around(T[0:3,3]*1000,decimals = 3) #convert from m to mm
         Ts_OE.append(T)
     Ts_OE = np.asarray(Ts_OE)
-    print(Ts_OE)
+    
     #T_CW is the calibration target origin in Camera frame coordinates
     os.chdir(T_CW_path)
     ts = np.loadtxt("TranslationVectors.txt") #The translation of the camera relative to the calibration target
@@ -126,7 +126,7 @@ def get_A_B(n):
         T_CW[0:3,3] = ts[i]
         Ts_CW.append(T_CW)
     Ts_CW = np.asarray(Ts_CW)
-    print(Ts_CW)
+
     #k = np.sort(np.random.choice(Ts_CW.shape[0],n,replace = False))
     #print(k)
     A = [] 
@@ -138,18 +138,17 @@ def get_A_B(n):
         print(a,b)
         A.append(np.dot(np.linalg.inv(Ts_OE[b]),Ts_OE[a]))
         B.append(np.dot(Ts_CW[b],np.linalg.inv(Ts_CW[a])))
+
     return A,B
     
-
-n = 4
+n = 9
 A,B = get_A_B(n)
 Rx,tx = handEye(A,B)#Transform from end effector to camera frame
 X = np.eye(4)
 X[0:3,0:3],X[0:3,3] = np.around(Rx,decimals = 6), np.around(tx,decimals=3)
 print(X)
 
-
-#np.save("X.npy",X)
+np.save("X.npy",X)
 e_angle = []
 e_vec = []
 t_e = []
@@ -163,7 +162,7 @@ for i in range(0,len(A)):
     q_a_est = shepperd(Rx@R_b@np.linalg.inv(Rx))
     q_a = shepperd(R_a)
     q_e = qprod(qconj(q_a_est),q_a)
-    theta_e = 2*np.arccos(np.linalg.norm(q_e[0]))
+    theta_e = 2*np.arccos(q_e[0])
     e_angle.append(theta_e)
     e_vec.append(q_e[1:])
     t_e.append(np.linalg.norm(t_xb - t_ax))

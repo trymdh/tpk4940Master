@@ -39,35 +39,32 @@ def triang(pix):
     t = time.time()
     ret,K,tvecs,rMats,dist= loadCaliParam(uname)
     laser = np.load("C:/Users/" + str(uname) + "/OneDrive/tpk4940Master/BestRansacPlane.npy")
-    laser[0:3] = laser[0:3]*1000
+
     #1 Undistort the pixels
     pix = pix.reshape(-2, 1, 2)
     undistorted_pixels = cv2.undistortPoints(pix, K, dist).reshape(-1,2)
-
     #2 Triangulate
     ext_points = np.array([])
 
     #Define lasernormal and laserpoint
     ln = laser[0:3]
+    ln[0:2] = - ln[0:2]
+    z_c = np.array([0,0,1])
+    theta = np.pi - np.arccos(np.dot(ln,z_c)/(np.linalg.norm(ln)*np.linalg.norm(z_c)))
+    print(np.rad2deg(theta))
     lp = laser[3:6]
     l_0 = np.array([0,0,0])
 
     for coord in undistorted_pixels:
         coord = np.append(coord,1)
         l = coord/np.linalg.norm(coord)
-        num = np.dot((lp - l_0), ln)
-        deno = np.dot(l,ln)
-        d = num/deno
+        d = np.dot((lp - l_0), ln)/np.dot(l,ln)
         fullcoord = np.array([l * d]) + l_0
         ext_points = np.append(ext_points,fullcoord) 
     elapsed = time.time() - t
 
     return np.reshape(ext_points,(-1,3))
 
-
-
-
-"""
 def in1d_dot_approach(A,B):
     cumdims = (np.maximum(A.max(),B.max())+1)**np.arange(B.shape[1])
     return A[~np.in1d(A.dot(cumdims),B.dot(cumdims))]
@@ -95,30 +92,36 @@ for i in range(0,1000):
     #reshape the COG-image from (2048,) to (2048,2)
     laserpixel = pixCoordify(laserlinepixels.ravel() / 64 , 2048)
     points = triang(laserpixel)
-    os.chdir("C:/Users/"+ str(uname) + "/OneDrive/tpk4940Master")
-    X = np.load("X.npy")
 
     #Removes non registered pixels from the triangulated points, 
     # NB! clean_points are the points we want to use to building a pointcloud
     clean_points = in1d_dot_approach(points,dead_points)
+    #np.save("POOOOOOINTS.npy",clean_points)
+    """
+    os.chdir("C:/Users/"+ str(uname) + "/OneDrive/tpk4940Master")
+    X = np.load("X.npy")
+    
     points_EE = []
     for point in clean_points:
-        points_EE.append(np.linalg.inv(X)@np.append(point,1).reshape(4,1))
+        points_EE.append(X@np.append(point,1).reshape(4,1))
     clean_points = np.asarray(points_EE)
+    """
     plt.clf()
     plt.ion()
     fig = plt.figure(1)
+
     ax = plt.axes(projection='3d')
     ax.set_xlabel("X")
     ax.set_ylabel("Y")
     ax.set_zlabel("Z")
+    #clean_points = points
     X = clean_points[:,0]
     Y = clean_points[:,1]
     Z = clean_points[:,2]
-    plt.gca().invert_zaxis()
-    ax.set_zlim3d(min(Z),max(Z))
-    ax.set_ylim3d(min(Y),max(Y))
-    ax.set_xlim3d(min(X),max(X))
+    #ax.set_aspect("equal")
+    #ax.set_zlim3d(min(Z),max(Z))
+    #ax.set_ylim3d(min(Y),max(Y))
+    #ax.set_xlim3d(min(X),max(X))
+
     ax.scatter3D(X,Y,Z)
     plt.pause(1/60)
-    """
