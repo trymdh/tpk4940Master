@@ -151,7 +151,7 @@ def defaultConfig(hDev):
 def imageConfig(hDev):
     cam.cx_setParam(hDev,"CameraMode","Image")
     cam.cx_setParam(hDev,"PixelFormat","Mono8")
-    cam.cx_setParam(hDev,"ExposureTimeAbs", 1500)
+    cam.cx_setParam(hDev,"ExposureTimeAbs", 4000)# default 1500
     cam.cx_setParam(hDev,"ReverseY", 1)
     cam.cx_setParam(hDev,"ReverseX", 0)
 
@@ -200,14 +200,14 @@ def cogConfig(hDev):
     cam.cx_setParam(hDev,"Vramp1", 109)
     cam.cx_setParam(hDev,"Vramp2", 109)
     cam.cx_setParam(hDev,"FOT", 10)
-    cam.cx_setParam(hDev,"ExposureTimeAbs", 100)
+    cam.cx_setParam(hDev,"ExposureTimeAbs", 100) #default 100
     cam.cx_setParam(hDev,"FramePeriode", 100)
     cam.cx_setParam(hDev,"MultipleSlopeMode", 3)
     cam.cx_setParam(hDev,"NDRMode", 0)
     cam.cx_setParam(hDev,"AoiSelector", 1)
     cam.cx_setParam(hDev,"AoiHeight", 1088)
     cam.cx_setParam(hDev,"AoiOffsetY", 0)
-    cam.cx_setParam(hDev,"AoiThreshold", 240)
+    cam.cx_setParam(hDev,"AoiThreshold", 180)#default 240
     cam.cx_setParam(hDev,"NumAOIs", 1)
     cam.cx_setParam(hDev,"SequencerMode", 0)
     cam.cx_setParam(hDev,"ProfileTriggerMode", 0)

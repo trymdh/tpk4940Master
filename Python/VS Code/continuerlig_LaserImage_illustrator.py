@@ -48,10 +48,9 @@ def triang(pix):
 
     #Define lasernormal and laserpoint
     ln = laser[0:3]
-    ln[0:2] = - ln[0:2]
+    ln[0:2] = ln[0:2]
     z_c = np.array([0,0,1])
     theta = np.pi - np.arccos(np.dot(ln,z_c)/(np.linalg.norm(ln)*np.linalg.norm(z_c)))
-    print(np.rad2deg(theta))
     lp = laser[3:6]
     l_0 = np.array([0,0,0])
 
@@ -96,20 +95,18 @@ for i in range(0,1000):
     #Removes non registered pixels from the triangulated points, 
     # NB! clean_points are the points we want to use to building a pointcloud
     clean_points = in1d_dot_approach(points,dead_points)
-    #np.save("POOOOOOINTS.npy",clean_points)
-    """
     os.chdir("C:/Users/"+ str(uname) + "/OneDrive/tpk4940Master")
     X = np.load("X.npy")
+    np.save("POOOOOOINTS.npy",clean_points)
     
     points_EE = []
     for point in clean_points:
         points_EE.append(X@np.append(point,1).reshape(4,1))
     clean_points = np.asarray(points_EE)
-    """
+
     plt.clf()
     plt.ion()
     fig = plt.figure(1)
-
     ax = plt.axes(projection='3d')
     ax.set_xlabel("X")
     ax.set_ylabel("Y")
@@ -119,9 +116,9 @@ for i in range(0,1000):
     Y = clean_points[:,1]
     Z = clean_points[:,2]
     #ax.set_aspect("equal")
-    #ax.set_zlim3d(min(Z),max(Z))
-    #ax.set_ylim3d(min(Y),max(Y))
-    #ax.set_xlim3d(min(X),max(X))
+    ax.set_zlim3d(np.mean(Z)-50,np.mean(Z)+50)
+    ax.set_ylim3d(np.mean(Y)-50,np.mean(Y)+50)
+    ax.set_xlim3d(np.mean(X)-50,np.mean(X)+50)
 
     ax.scatter3D(X,Y,Z)
     plt.pause(1/60)

@@ -14,23 +14,11 @@ s = np.sin
 transpose = np.transpose
 sqrt = np.sqrt
 
-def homogenify(G):
-    H = []
-    for point in G:
-        H.append(np.append(point,1))
-    return np.asarray(H)
-
 def getUname():
     uname = os.getlogin()
     if uname == "trymdh":
         uname = uname + ".WIN-NTNU-NO"
     return uname
-def sortList(unsortedList):
-    #sort a list in alphanumeric order
-    convert = lambda text: int(text) if text.isdigit() else text.lower()
-    alphanum_key = lambda key: [convert(c) for c in re.split('([0-9]+)',key)]
-    return sorted(unsortedList,key = alphanum_key)
-    
 points = np.load("POOOOOOINTS.npy")
 base_tool = np.load("T.npy")
 base_tool[0:3,3] = base_tool[0:3,3]*1000
@@ -40,9 +28,14 @@ X = np.load("X.npy")
 Y = base_tool@X
 print(Y)
 points_Y = []
-for point in points:
-    points_Y.append(np.dot(Y,np.append(point,1)))
+for j in range(0,500):
+    #simulating movement along X axes
+    Y[:3,3][0] += 1
+    for point in points:
+        points_Y.append(np.dot(Y,np.append(point,1)))
 points_Y = np.asarray(points_Y)
+points_Y = points_Y[::100]
+
 ax = plt.axes(projection='3d')
 ax.set_xlabel("X")
 ax.set_ylabel("Y")
@@ -51,7 +44,10 @@ ax.set_zlabel("Z")
 X = points_Y[:,0]
 Y = points_Y[:,1]
 Z = points_Y[:,2]
+
 #ax.set_aspect("equal")
-print(max(Z)-min(Z))
+ax.set_zlim3d(np.mean(Z)-50,np.mean(Z)+50)
+ax.set_ylim3d(np.mean(Y)-50,np.mean(Y)+50)
+ax.set_xlim3d(np.mean(X)-50,np.mean(X)+50)
 ax.scatter3D(X,Y,Z)
 plt.show()
