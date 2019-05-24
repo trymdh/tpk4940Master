@@ -45,6 +45,10 @@ def logMatrix(R):
     log_A_skewsym = (R-R.T)*theta/(2*np.sin(theta))
     log_A = unskew(log_A_skewsym)
     return log_A
+def log(R):
+    # Rotation matrix logarithm
+    theta = np.arccos((R[0,0] + R[1,1] + R[2,2] - 1.0)/2.0)
+    return np.array([R[2,1] - R[1,2], R[0,2] - R[2,0], R[1,0] - R[0,1]]) / (2*np.sin(theta))
 
 def handEye(A,B):
     """
@@ -73,8 +77,8 @@ def handEye(A,B):
     n = len(A)
     Ka = np.zeros((3,n)); Kb = np.zeros((3,n))
     for i in range(0,n):
-        Ka[:,i] = logMatrix(A[i][0:3,0:3]).ravel()
-        Kb[:,i] = logMatrix(B[i][0:3,0:3]).ravel()
+        Ka[:,i] = log(A[i][0:3,0:3]).ravel()
+        Kb[:,i] = log(B[i][0:3,0:3]).ravel()
     
     H = np.dot(Kb,np.transpose(Ka))
     u,s,vh = np.linalg.svd(H)
@@ -142,22 +146,27 @@ def get_A_B(n):
     return A,B
     
 n = 9
+
 A,B = get_A_B(n)
 Rx,tx = handEye(A,B)#Transform from end effector to camera frame
 X = np.eye(4)
 X[0:3,0:3],X[0:3,3] = np.around(Rx,decimals = 6), np.around(tx,decimals=3)
 print(X)
 
-np.save("X.npy",X)
+#np.save("X.npy",X)
 e_angle = []
 e_vec = []
 t_e = []
+R_e = []
 for i in range(0,len(A)):
     AX = np.dot(A[i],X)
     XB = np.dot(X,B[i])
     R_a,R_b = A[i][0:3,0:3], B[i][0:3,0:3]
+    R_e.append(np.linalg.norm(log(np.dot(R_a,np.transpose(R_b)))))
     t_ax = AX[0:3,3]
     t_xb = XB[0:3,3]
+    t_e.append(np.linalg.norm(t_xb - t_ax))
+    """
     #calculate the deviation in rotation using quaternions
     q_a_est = shepperd(Rx@R_b@np.linalg.inv(Rx))
     q_a = shepperd(R_a)
@@ -165,9 +174,11 @@ for i in range(0,len(A)):
     theta_e = 2*np.arccos(q_e[0])
     e_angle.append(theta_e)
     e_vec.append(q_e[1:])
-    t_e.append(np.linalg.norm(t_xb - t_ax))
 
+"""
+print(R_e)
+#print(t_e)
 #print(rotx(pi/2)@roty(pi))
-print("Mean error in rotation angle is {0} radians".format(np.mean(e_angle)))
-print("Mean error in rotation axis [{1},{2},{3}]".format(np.mean(e_angle),np.mean(e_vec[0]),np.mean(e_vec[1]),np.mean(e_vec[2])))
-print("Mean error in translation: {0} mm".format(np.mean(t_e)))
+#print("Mean error in rotation angle is {0} radians".format(np.mean(e_angle)))
+#print("Mean error in rotation axis [{1},{2},{3}]".format(np.mean(e_angle),np.mean(e_vec[0]),np.mean(e_vec[1]),np.mean(e_vec[2])))
+#print("Mean error in translation: {0} mm".format(np.mean(t_e)))

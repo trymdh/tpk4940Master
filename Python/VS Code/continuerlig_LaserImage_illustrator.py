@@ -96,14 +96,15 @@ for i in range(0,1000):
     # NB! clean_points are the points we want to use to building a pointcloud
     clean_points = in1d_dot_approach(points,dead_points)
     os.chdir("C:/Users/"+ str(uname) + "/OneDrive/tpk4940Master")
+    """
     X = np.load("X.npy")
-    np.save("POOOOOOINTS.npy",clean_points)
     
     points_EE = []
     for point in clean_points:
         points_EE.append(X@np.append(point,1).reshape(4,1))
     clean_points = np.asarray(points_EE)
-
+"""
+    np.save("POOOOOOINTS.npy",clean_points)
     plt.clf()
     plt.ion()
     fig = plt.figure(1)

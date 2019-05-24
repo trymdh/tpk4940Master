@@ -38,9 +38,11 @@ def workDistance(q,L):
 
 fA = 45
 lP = 40
+
 D = workDistance(fA,lP)
 print("With a {0} degree fan angle, and laser line length of {1}, the workdistance in cm is: {2}".format(fA,lP,D))
 
+print(fanAngle(500,414))
 
 #Ds,Ls = d_and_L(45)
 #print(Ds)
