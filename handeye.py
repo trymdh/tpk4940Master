@@ -5,7 +5,7 @@ import numpy as np
 import glob
 from quaternion import*
 from matplotlib import pyplot as plt
-from matplotlib.ticker import MaxNLocator 
+from matplotlib.ticker import MaxNLocator,ScalarFormatter 
 np.set_printoptions(suppress=True)
 
 def getUname():
@@ -52,39 +52,20 @@ def log(R):
     theta = np.arccos((R[0,0] + R[1,1] + R[2,2] - 1.0)/2.0)
     return np.array([R[2,1] - R[1,2], R[0,2] - R[2,0], R[1,0] - R[0,1]]) / (2*np.sin(theta))
 
-def handEye(A,B):
-    """
-    Set of transforms between the robot base and the robot end effector:
-    A = [A1,A2,..,An]
-    Set of transforms between between work space and camera frame:
-    B = [B1,B2,...,Bn]
-
-    One pair of A and B where q_1a != q_1b
-    A1a = T_OE_1a #Pose at joint vector q_1a
-    A1b = T_OE_1b #Pose at joint vector q_1b
-    B1a = T_CW_1a #Pose at joint vector q_1a
-    B1b = T_CW_1b #Pose at joint vector q_1b
-    -> A1 = (A1b)^(-1)@A1a
-    -> B1 = B1b@(B1a)^(-1)
-    Then the basic hand-eye equation for ONE pair of different poses is:
-    A1@X = X@B1
-    To find X we need n >= 2 different pair of poses
-    A1@X = X@B1
-    A2@X = X@B2
-        .....
-    An@X = X@B_n
-    """
+def handEye(A,B,cnt):
     #Solving AX = BX, need n >= 2 pairs of transforms, i.e len(A) = len(B) >= 2
     #based on MATLAB code in Olav Vision Notes
     n = len(A)
     Ka = np.zeros((3,n)); Kb = np.zeros((3,n))
-    for i in range(0,n):
-        Ka[:,i] = log(A[i][0:3,0:3]).ravel()
-        Kb[:,i] = log(B[i][0:3,0:3]).ravel()
+    for i in range(0,n-1):
+        Ka[:,i] = logMatrix(A[i][0:3,0:3]).ravel()
+        Kb[:,i] = logMatrix(B[i][0:3,0:3]).ravel()
 
-    #print(Ka)
-    #print(Kb)
+    #print(Kb.reshape(cnt,3))
+    #print(np.isnan(Kb))
+    #Kb = np.nan_to_num(Kb)
     H = np.dot(Kb,np.transpose(Ka))
+    
     #print(H)
     u,s,vh = np.linalg.svd(H)
     v = vh.conj().T
@@ -122,7 +103,7 @@ def get_A_B(n):
         T[0:3,3] = np.around(T[0:3,3]*1000,decimals = 3) #convert from m to mm
         Ts_OE.append(T)
     Ts_OE = np.asarray(Ts_OE)
-    
+
     #T_CW is the calibration target origin in Camera frame coordinates
     os.chdir(T_CW_path)
     ts = np.loadtxt("TranslationVectors.txt") #The translation of the camera relative to the calibration target
@@ -134,6 +115,7 @@ def get_A_B(n):
         T_CW[0:3,0:3] = np.linalg.inv(Rs[i])
         T_CW[0:3,3] = ts[i]
         Ts_CW.append(T_CW)
+    
     Ts_CW = np.asarray(Ts_CW)
 
     #k = np.sort(np.random.choice(Ts_CW.shape[0],n,replace = False))
@@ -143,8 +125,10 @@ def get_A_B(n):
     #calulate different pairs of poses
     cnt = 0
     for i in range(0,n):
-        for j in range(0,n):
+        for j in range(i+1,n):
             if j != i:
+                #combiantions
+                #print(i,j)
                 cnt += 1
                 A.append(np.dot(np.linalg.inv(Ts_OE[j]),Ts_OE[i]))
                 B.append(np.dot(Ts_CW[j],np.linalg.inv(Ts_CW[i])))
@@ -155,20 +139,22 @@ R_error = []
 t_error = []
 cnt_list = []
 
-for i in range(3,8):
+#poses from 1-18
+n = 8
+for i in range(3,n):
     A,B,cnt = get_A_B(i)
-    Rx,tx = handEye(A,B) #Transform from end effector to camera frame
+    Rx,tx = handEye(A,B,cnt) #Transform from end effector to camera frame
     X = np.eye(4)
     X[0:3,0:3],X[0:3,3] = np.around(Rx,decimals = 6), np.around(tx,decimals=3)
     print(X)
-
-    #np.save("X.npy",X)
+    np.save("X.npy",X)
     q_metric = []
     t_e = []
     R_e = []
     for i in range(0,len(A)):
         AX, XB = np.dot(A[i],X), np.dot(X,B[i])
         R_a, R_b = A[i][0:3,0:3], B[i][0:3,0:3]
+        R_e.append(np.linalg.norm(np.eye(3) - np.dot(R_a,np.linalg.inv(R_b))))
         t_ax, t_xb = AX[0:3,3], XB[0:3,3]
         t_e.append(np.linalg.norm(t_xb - t_ax))
         
@@ -179,21 +165,22 @@ for i in range(3,8):
         q_metric.append(np.linalg.norm(q_e))
 
 
-    #print(R_e)
+    #print(np.mean(R_e))
     #print(t_e)
     print("Mean error in rotation is {0} units".format(np.mean(q_metric)))
     print("Mean error in translation: {0} mm".format(np.mean(t_e)))
-    R_error.append(np.mean(q_metric))
+    R_error.append(np.mean(q_metric)*1e7)
     t_error.append(np.mean(t_e))
     cnt_list.append(cnt)
 
 t = cnt_list
 ax = plt.figure(1)
 plt.subplot(211)
-plt.ylabel("|1-|q_e||")
+plt.title("Error in rotation (quaternion), |1-|q_e||*1e7")
 plt.plot(t,R_error)
 ax.gca().xaxis.set_major_locator(MaxNLocator(integer=True))
 plt.subplot(212)
+plt.title("Error in translation, |t_a - t_b|")
 plt.plot(t,t_error)
 plt.ylabel("mm")
 plt.xlabel("# permutations")
