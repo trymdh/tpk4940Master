@@ -4,6 +4,8 @@ import random
 import numpy as np
 import glob
 from quaternion import*
+from matplotlib import pyplot as plt
+from matplotlib.ticker import MaxNLocator 
 np.set_printoptions(suppress=True)
 
 def getUname():
@@ -79,8 +81,11 @@ def handEye(A,B):
     for i in range(0,n):
         Ka[:,i] = log(A[i][0:3,0:3]).ravel()
         Kb[:,i] = log(B[i][0:3,0:3]).ravel()
-    
+
+    #print(Ka)
+    #print(Kb)
     H = np.dot(Kb,np.transpose(Ka))
+    #print(H)
     u,s,vh = np.linalg.svd(H)
     v = vh.conj().T
     S = np.eye(3)
@@ -136,49 +141,61 @@ def get_A_B(n):
     A = [] 
     B = []
     #calulate different pairs of poses
+    cnt = 0
     for i in range(0,n):
-        a = i
-        b = i + 1
-        print(a,b)
-        A.append(np.dot(np.linalg.inv(Ts_OE[b]),Ts_OE[a]))
-        B.append(np.dot(Ts_CW[b],np.linalg.inv(Ts_CW[a])))
+        for j in range(0,n):
+            if j != i:
+                cnt += 1
+                A.append(np.dot(np.linalg.inv(Ts_OE[j]),Ts_OE[i]))
+                B.append(np.dot(Ts_CW[j],np.linalg.inv(Ts_CW[i])))
+    print("Number of permutations: {0}".format(cnt))
+    return np.asarray(A),np.asarray(B),cnt
 
-    return A,B
-    
-n = 9
+R_error = []
+t_error = []
+cnt_list = []
 
-A,B = get_A_B(n)
-Rx,tx = handEye(A,B)#Transform from end effector to camera frame
-X = np.eye(4)
-X[0:3,0:3],X[0:3,3] = np.around(Rx,decimals = 6), np.around(tx,decimals=3)
-print(X)
+for i in range(3,8):
+    A,B,cnt = get_A_B(i)
+    Rx,tx = handEye(A,B) #Transform from end effector to camera frame
+    X = np.eye(4)
+    X[0:3,0:3],X[0:3,3] = np.around(Rx,decimals = 6), np.around(tx,decimals=3)
+    print(X)
 
-#np.save("X.npy",X)
-e_angle = []
-e_vec = []
-t_e = []
-R_e = []
-for i in range(0,len(A)):
-    AX = np.dot(A[i],X)
-    XB = np.dot(X,B[i])
-    R_a,R_b = A[i][0:3,0:3], B[i][0:3,0:3]
-    R_e.append(np.linalg.norm(log(np.dot(R_a,np.transpose(R_b)))))
-    t_ax = AX[0:3,3]
-    t_xb = XB[0:3,3]
-    t_e.append(np.linalg.norm(t_xb - t_ax))
-    """
-    #calculate the deviation in rotation using quaternions
-    q_a_est = shepperd(Rx@R_b@np.linalg.inv(Rx))
-    q_a = shepperd(R_a)
-    q_e = qprod(qconj(q_a_est),q_a)
-    theta_e = 2*np.arccos(q_e[0])
-    e_angle.append(theta_e)
-    e_vec.append(q_e[1:])
+    #np.save("X.npy",X)
+    q_metric = []
+    t_e = []
+    R_e = []
+    for i in range(0,len(A)):
+        AX, XB = np.dot(A[i],X), np.dot(X,B[i])
+        R_a, R_b = A[i][0:3,0:3], B[i][0:3,0:3]
+        t_ax, t_xb = AX[0:3,3], XB[0:3,3]
+        t_e.append(np.linalg.norm(t_xb - t_ax))
+        
+        #calculate the deviation in rotation using unit quaternions
+        q_a_est = shepperd(Rx@R_b@np.linalg.inv(Rx)) # R_a = Rx*R_b*(Rx)^-1
+        q_a = shepperd(R_a)
+        q_e = 1 - np.linalg.norm(qprod(qconj(q_a_est),q_a)) #distance metric in a scalar approximate value
+        q_metric.append(np.linalg.norm(q_e))
 
-"""
-print(R_e)
-#print(t_e)
-#print(rotx(pi/2)@roty(pi))
-#print("Mean error in rotation angle is {0} radians".format(np.mean(e_angle)))
-#print("Mean error in rotation axis [{1},{2},{3}]".format(np.mean(e_angle),np.mean(e_vec[0]),np.mean(e_vec[1]),np.mean(e_vec[2])))
-#print("Mean error in translation: {0} mm".format(np.mean(t_e)))
+
+    #print(R_e)
+    #print(t_e)
+    print("Mean error in rotation is {0} units".format(np.mean(q_metric)))
+    print("Mean error in translation: {0} mm".format(np.mean(t_e)))
+    R_error.append(np.mean(q_metric))
+    t_error.append(np.mean(t_e))
+    cnt_list.append(cnt)
+
+t = cnt_list
+ax = plt.figure(1)
+plt.subplot(211)
+plt.ylabel("|1-|q_e||")
+plt.plot(t,R_error)
+ax.gca().xaxis.set_major_locator(MaxNLocator(integer=True))
+plt.subplot(212)
+plt.plot(t,t_error)
+plt.ylabel("mm")
+plt.xlabel("# permutations")
+ax.gca().xaxis.set_major_locator(MaxNLocator(integer=True))
+plt.show()
