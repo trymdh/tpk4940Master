@@ -159,11 +159,10 @@ for i in range(3,n):
         t_e.append(np.linalg.norm(t_xb - t_ax))
         
         #calculate the deviation in rotation using unit quaternions
-        q_a_est = shepperd(Rx@R_b@np.linalg.inv(Rx)) # R_a = Rx*R_b*(Rx)^-1
+        q = shepperd(Rx@R_b@np.linalg.inv(Rx)) # R_a = Rx*R_b*(Rx)^-1
         q_a = shepperd(R_a)
-        q_e = 1 - np.linalg.norm(qprod(qconj(q_a_est),q_a)) #distance metric in a scalar approximate value
-        q_metric.append(np.linalg.norm(q_e))
-
+        q_e = np.linalg.norm(1 - np.linalg.norm(qprod(q_a,qconj(q)))) #distance metric in a scalar approximate value
+        q_metric.append(q_e)
 
     #print(np.mean(R_e))
     #print(t_e)

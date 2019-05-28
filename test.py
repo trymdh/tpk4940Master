@@ -32,7 +32,7 @@ points_Y = []
 for j in range(0,300):
     #simulating movement along X axes
     Y[:3,3][0] += 0.1
-    Y[:3,3][2] += 0.1
+    #Y[:3,3][2] += 0.1
     for point in points:
         points_Y.append(np.dot(Y,np.append(point,1)))
 points_Y = np.asarray(points_Y)
@@ -52,5 +52,4 @@ ax.set_zlim3d(np.mean(Z)-50,np.mean(Z)+50)
 ax.set_ylim3d(np.mean(Y)-50,np.mean(Y)+50)
 ax.set_xlim3d(np.mean(X)-50,np.mean(X)+50)
 ax.scatter3D(X,Y,Z)
-
 plt.show()
