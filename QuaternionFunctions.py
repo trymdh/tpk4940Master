@@ -1,10 +1,5 @@
 import numpy as np
-pi = np.pi
-c = np.cos
-s = np.sin
-transpose = np.transpose
-sqrt = np.sqrt
-
+from MatrixFunctions import rotx,roty,rotz
 def shepperd(R):
     #Quaternion from rotation matrix using Shepperd's algorithm,
     #which is stable, does not lose significant precision and uses only one sqrt.
@@ -59,6 +54,7 @@ def qprod(q1,q2):
 def qconj(q):
     q[1:] = -q[1:]
     return q
+    
 def quat2rot(q):
     #Takes a quaternion and returns its corresponding rotation matrix
     n = q[0]
@@ -68,29 +64,3 @@ def quat2rot(q):
     R[1,0:3] = np.array([2*(e_x*e_y + n*e_z),2*(n**2 + e_y**2)-1,2*(e_y*e_z - n*e_x)])
     R[2,0:3] = np.array([2*(e_x*e_z - n*e_y),2*(e_y*e_z + n*e_x),2*(n**2 + e_z**2)-1])
     return R
-#Returns the rotation about the x-axis
-def rotx(angle):
-
-	R = np.array([[1, 0, 0],[0, c(angle), -s(angle)],[0, s(angle), c(angle)]])
-	
-	#Evenly round to the given number of decimals.
-	R = np.around(R,decimals = 4)
-	return R
-
-#Returns the rotation about the y-axis
-def roty(angle):
-	
-	R = np.array([[c(angle), 0, s(angle)],[0, 1, 0],[-s(angle), 0, c(angle)]])
-	
-	#Evenly round to the given number of decimals.
-	R = np.around(R,decimals = 4)
-	return R
-
-#Returns the rotation about the z-axis
-def rotz(angle):
-
-	R = np.array([[c(angle), -s(angle), 0],[s(angle), c(angle), 0], [0, 0, 1]])
-	
-	#Evenly round to the given number of decimals.
-	R = np.around(R,decimals = 4)
-	return R

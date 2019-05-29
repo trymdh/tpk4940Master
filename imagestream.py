@@ -1,11 +1,14 @@
-from AT_cx_functions import*
-from matplotlib import pyplot as plt
 import msvcrt
+import numpy as np
 import cv2 as cv
+from matplotlib import pyplot as plt
+from CameraFunctions import getDevice, snap, cogConfig, imageConfig, cam
 
 #Find and configure the device
 hDev = getDevice()
 imageConfig(hDev)
+
+#stream the camera until "q" is pressed, then quit the stream and set camera in COG mode.
 Pressed = True
 while Pressed:
     if msvcrt.kbhit():
@@ -17,7 +20,7 @@ while Pressed:
             plt.close()
             print("Loop exited")
             break
-    #Snap an image of the scene in COG mode.
+    #Snap an image of the scene
     img = snap(hDev)
     #scale the image and plot with matplotlib
     img_mean = np.mean(img.data)

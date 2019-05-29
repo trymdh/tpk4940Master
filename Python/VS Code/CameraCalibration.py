@@ -7,8 +7,19 @@ import cx.cx_base as base
 from AT_cx_functions import *
 import glob
 
-uname = getUname()
+class Chessboard:
+    def __init__(self):
+        #chessboard dimensions
+        self.cbrow = 7
+        self.cbcol = 10
+        self.sqrsize = 20 #mm
+        #termination criteria
+        self.criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, self.sqrsize, 0.001)
+        self.objp = np.zeros((self.cbrow*self.cbcol,3),np.float32)
+        self.objp[:,:2] = np.mgrid[0:self.cbcol,0:self.cbrow].T.reshape(-1,2)
 
+
+uname = getUname()
 image_folder = "C:/Users/"+ str(uname) + "/OneDrive/tpk4940Master/Camera calibration May/Images"
 os.chdir(image_folder)
 

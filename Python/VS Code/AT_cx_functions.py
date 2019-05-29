@@ -92,55 +92,6 @@ def snap(hDev):
         #print("cx_closeDevice returned error %d" % (result))
     return image
 
-def getSequence(num_img, hDev):
-    """
-    Snaps a sequence of images from the device
-    """
-    #Allocate and queue internal buffers (buffer = temporary image storage)
-    result = cam.cx_allocAndQueueBuffers(hDev,16)
-    
-    #Start acquisition
-    result = cam.cx_startAcquisition(hDev)
-    if result != base.CX_STATUS_OK:
-        print("Error, acquisition not started due to error")
-
-    fig = plt.figure()
-    plt.title("sequence")
-    images = []
-    
-    for x in range(num_img):
-        #hBuffer
-        result, hBuffer = cam.cx_waitForBuffer(hDev,1000)
-
-        if result != base.CX_STATUS_OK:
-            print("Error, grab image buffer not started due to error")
-        
-        result, img = cam.cx_getBufferImage(hBuffer,0)
-        if result != base.CX_STATUS_OK:
-            print("Error, saving image buffer not started due to error")
-        
-        #scale the image and plot with matplotlib
-        img_mean = np.mean(img.data)
-        img_min = np.min(img.data)
-        img_max = np.max(img.data)
-        img_std = np.std(img.data)
-
-        #render image
-        axes_img = plt.imshow(img.data, vmin = img_mean - 3*img_std, vmax = img_mean + 3*img_std, cmap = "gray", interpolation="None", animated = True)
-        images.append([axes_img])
-        
-        #Queue back the buffer. From now on the img.data is not valid anymore and might be overwritten with new image data at any time!
-        result = cam.cx_queueBuffer(hBuffer)
-
-    #show the sequence
-    ani = animation.ArtistAnimation(fig,images,interval = 20, blit = True, repeat_delay = 1000)
-    plt.show()
-
-    #Stop acquisition
-    result = cam.cx_stopAcquisition(hDev)
-    if result != base.CX_STATUS_OK:
-        print("Error, image acquisiton not ended due to error")
-
 def defaultConfig(hDev):
     """
     Configure the camera in the default config, i.e reset the device.
@@ -562,7 +513,6 @@ def getCentroid3D(pointCloud):
     #this function returns the centroid
     xs = pointCloud[:,0]; ys = pointCloud[:,1]; zs = pointCloud[:,2]
     x_av = np.average(xs); y_av = np.average(ys); z_av = np.average(zs)
-
     return np.array([x_av,y_av,z_av])
 
 def getPlaneData(pI,ax):
@@ -576,7 +526,6 @@ def getPlaneData(pI,ax):
         for c in range(X.shape[1]):
             #z = a*X + b*Y + d 
             Z[r,c] = -(pI[0] * X[r,c] + pI[1] * Y[r,c] + pI[3])*1./pI[2]
-
     return X,Y,Z
 
 def estimatePlane(points):
@@ -821,13 +770,3 @@ def planeify(vector_plane): #Assumes form [a,b,c,x_0,y_0,z_0]
     #Or on form [Ax + By + D] = z
     plane_s = np.asarray([-plane[0]/plane[2],-plane[1]/plane[2],-plane[3]/plane[2]])
     return plane,plane_s
-
-def error_checker(plane,point_cloud):
-    [A,B,C,D] = plane
-    distances = np.array([])
-    for i in range(len(point_cloud[:,0])):
-        [x,y,z] = [point_cloud[i,0],point_cloud[i,1],point_cloud[i,2]] 
-        d = abs(A*x + B*y + C*z + D)/np.sqrt(A**2 + B**2 + C**2)
-        distances = np.append(distances,d)
-        
-    return sum(distances)/len(distances)

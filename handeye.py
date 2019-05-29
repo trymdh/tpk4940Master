@@ -3,54 +3,12 @@ import re
 import random
 import numpy as np
 import glob
-from quaternion import*
+from QuaternionFunctions import*
 from matplotlib import pyplot as plt
 from matplotlib.ticker import MaxNLocator,ScalarFormatter 
+from UtilityFunctions import getUname, sortList
+from MatrixFunctions import skew, unskew, logMatrix
 np.set_printoptions(suppress=True)
-
-def getUname():
-    uname = os.getlogin()
-    if uname == "trymdh":
-        uname = uname + ".WIN-NTNU-NO"
-    return uname
-def sortList(unsortedList):
-    #sort a list in alphanumeric order
-    convert = lambda text: int(text) if text.isdigit() else text.lower()
-    alphanum_key = lambda key: [convert(c) for c in re.split('([0-9]+)',key)]
-    return sorted(unsortedList,key = alphanum_key)
-
-def skew(k):
-    return np.array([[0,-k[2],k[1]],[k[2],0,-k[0]],[-k[1],k[0],0]])
-
-def unskew(SS):
-    """
-    This function takes in a skew symmetrix matrix and returns
-    it on vector form.
-    """
-    x = SS[2,1]
-    y = SS[0,2]
-    z = SS[1,0]
-    return np.array([[x,y,z]]).T
-
-def logMatrix(R):
-    """
-    A = |R(theta) t(x,y,z)|
-        |   0        1    |
-    when |theta| < pi:
-        tr(R) = 1 + 2*cos(theta)
-    ----------------------------------------
-    log A = (R-R.T)*(theta/2*sin(theta))
-    """
-    theta = np.arccos((np.trace(R)-1)/2)
-    #print(np.linalg.norm(theta) < np.pi)
-    
-    log_A_skewsym = (R-R.T)*theta/(2*np.sin(theta))
-    log_A = unskew(log_A_skewsym)
-    return log_A
-def log(R):
-    # Rotation matrix logarithm
-    theta = np.arccos((R[0,0] + R[1,1] + R[2,2] - 1.0)/2.0)
-    return np.array([R[2,1] - R[1,2], R[0,2] - R[2,0], R[1,0] - R[0,1]]) / (2*np.sin(theta))
 
 def handEye(A,B,cnt):
     #Solving AX = BX, need n >= 2 pairs of transforms, i.e len(A) = len(B) >= 2
@@ -138,7 +96,6 @@ def get_A_B(n):
 R_error = []
 t_error = []
 cnt_list = []
-
 #poses from 1-18
 n = 8
 for i in range(3,n):
@@ -149,14 +106,18 @@ for i in range(3,n):
     print(X)
     np.save("X.npy",X)
     q_metric = []
-    t_e = []
+    t_ex = []
+    t_ey = []
+    t_ez = []
     R_e = []
     for i in range(0,len(A)):
         AX, XB = np.dot(A[i],X), np.dot(X,B[i])
         R_a, R_b = A[i][0:3,0:3], B[i][0:3,0:3]
         R_e.append(np.linalg.norm(np.eye(3) - np.dot(R_a,np.linalg.inv(R_b))))
         t_ax, t_xb = AX[0:3,3], XB[0:3,3]
-        t_e.append(np.linalg.norm(t_xb - t_ax))
+        t_ex.append(np.linalg.norm(t_xb[0] - t_ax[0]))
+        t_ey.append(np.linalg.norm(t_xb[1] - t_ax[1]))
+        t_ez.append(np.linalg.norm(t_xb[2] - t_ax[2]))
         
         #calculate the deviation in rotation using unit quaternions
         q = shepperd(Rx@R_b@np.linalg.inv(Rx)) # R_a = Rx*R_b*(Rx)^-1
@@ -166,21 +127,24 @@ for i in range(3,n):
 
     #print(np.mean(R_e))
     #print(t_e)
-    print("Mean error in rotation is {0} units".format(np.mean(q_metric)))
-    print("Mean error in translation: {0} mm".format(np.mean(t_e)))
-    R_error.append(np.mean(q_metric)*1e7)
-    t_error.append(np.mean(t_e))
+    print("Mean quaternion error in rotation is {0} units".format(np.mean(q_metric)))
+    print("Mean error in translation [ex,ey,ez]: {0}mm, {1}mm, {2}mm".format(np.mean(t_ex),np.mean(t_ey),np.mean(t_ez)))
+    R_error.append(np.mean(q_metric))
+    t_error.append([np.mean(t_ex),np.mean(t_ey),np.mean(t_ez)])
     cnt_list.append(cnt)
-
+t_error = np.asarray(t_error)
 t = cnt_list
 ax = plt.figure(1)
 plt.subplot(211)
-plt.title("Error in rotation (quaternion), |1-|q_e||*1e7")
+plt.title("Mean quaternion error in rotation, |1-|q_e||")
 plt.plot(t,R_error)
 ax.gca().xaxis.set_major_locator(MaxNLocator(integer=True))
 plt.subplot(212)
-plt.title("Error in translation, |t_a - t_b|")
-plt.plot(t,t_error)
+plt.title("Mean Error in translation")
+plt.plot(t,t_error[:,0], label = "e_x")
+plt.plot(t,t_error[:,1], label = "e_y")
+plt.plot(t,t_error[:,2], label = "e_z")
+plt.legend()
 plt.ylabel("mm")
 plt.xlabel("# permutations")
 ax.gca().xaxis.set_major_locator(MaxNLocator(integer=True))

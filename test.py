@@ -22,8 +22,8 @@ def getUname():
         uname = uname + ".WIN-NTNU-NO"
     return uname
 points = np.load("POOOOOOINTS.npy")
-print(points.shape)
-points = points[700:1200]
+points = points[800:1500]
+
 base_tool = np.load("T.npy")
 base_tool[0:3,3] = base_tool[0:3,3]*1000
 print(base_tool)
@@ -38,7 +38,7 @@ for j in range(0,100):
     for point in points:
         points_Y.append(np.dot(Y,np.append(point,1)))
 points_Y = np.asarray(points_Y)
-points_Y = points_Y[::10]
+points_Y = points_Y
 
 #clean_points = points
 X = points_Y[:,0]
