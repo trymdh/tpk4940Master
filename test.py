@@ -29,14 +29,14 @@ X = np.load("X.npy")
 Y = base_tool@X
 print(Y)
 points_Y = []
-for j in range(0,300):
+for j in range(0,100):
     #simulating movement along X axes
-    Y[:3,3][0] += 0.1
+    Y[:3,3][0] += 1
     #Y[:3,3][2] += 0.1
     for point in points:
         points_Y.append(np.dot(Y,np.append(point,1)))
 points_Y = np.asarray(points_Y)
-points_Y = points_Y[::50]
+points_Y = points_Y[::10]
 
 #clean_points = points
 X = points_Y[:,0]
@@ -49,7 +49,7 @@ your_mesh = Mesh.from_file('Testpiece.stl')
 #align the stl file with the point cloud for visual check
 your_mesh.rotate([0,1,0],np.deg2rad(90))
 your_mesh.rotate([1,0,0],np.deg2rad(270))
-your_mesh.translate([400,-1184 + 75,380])
+your_mesh.translate([280,-1109,380])
 
 fig = plt.figure(1)
 # Auto scale to the mesh size
@@ -67,6 +67,6 @@ s = 75
 ax.set_zlim3d(np.mean(Z)-s,np.mean(Z)+s)
 ax.set_ylim3d(np.mean(Y)-s,np.mean(Y)+s)
 ax.set_xlim3d(np.mean(X)-s,np.mean(X)+s)
-ax.scatter3D(X,Y,Z,color = "red")
+ax.scatter3D(X,Y,Z,color = "red",alpha = 0.5)
 plt.show()
 
