@@ -22,6 +22,8 @@ def getUname():
         uname = uname + ".WIN-NTNU-NO"
     return uname
 points = np.load("POOOOOOINTS.npy")
+print(points.shape)
+points = points[700:1200]
 base_tool = np.load("T.npy")
 base_tool[0:3,3] = base_tool[0:3,3]*1000
 print(base_tool)
@@ -48,8 +50,8 @@ os.chdir(os.getcwd() + "\TestPiece")
 your_mesh = Mesh.from_file('Testpiece.stl')
 #align the stl file with the point cloud for visual check
 your_mesh.rotate([0,1,0],np.deg2rad(90))
-your_mesh.rotate([1,0,0],np.deg2rad(270))
-your_mesh.translate([280,-1109,380])
+your_mesh.rotate([1,0,0],np.deg2rad(271.25))
+your_mesh.translate([280,-1122,299])
 
 fig = plt.figure(1)
 # Auto scale to the mesh size
@@ -63,7 +65,7 @@ ax.set_xlabel("X")
 ax.set_ylabel("Y")
 ax.set_zlabel("Z")
 ax.set_aspect("equal")
-s = 75
+s = 50
 ax.set_zlim3d(np.mean(Z)-s,np.mean(Z)+s)
 ax.set_ylim3d(np.mean(Y)-s,np.mean(Y)+s)
 ax.set_xlim3d(np.mean(X)-s,np.mean(X)+s)

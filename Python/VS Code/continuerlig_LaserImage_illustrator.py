@@ -103,7 +103,7 @@ for i in range(0,1000):
     for point in clean_points:
         points_EE.append(X@np.append(point,1).reshape(4,1))
     clean_points = np.asarray(points_EE)
-"""
+    """
     np.save("POOOOOOINTS.npy",clean_points)
     plt.clf()
     plt.ion()
@@ -112,7 +112,7 @@ for i in range(0,1000):
     ax.set_xlabel("X")
     ax.set_ylabel("Y")
     ax.set_zlabel("Z")
-    #clean_points = points
+    clean_points = clean_points[700:1200]
     X = clean_points[:,0]
     Y = clean_points[:,1]
     Z = clean_points[:,2]
