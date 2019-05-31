@@ -1,11 +1,12 @@
 import os
 import time
+import glob
 import msvcrt
 import numpy as np
 import cv2 as cv2
 from matplotlib import pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
-from UtilityFunctions import getUname
+from UtilityFunctions import getUname, sortList
 from loadCalibration import loadCaliParam
 from CameraFunctions import getDevice, snap, imageConfig, cogConfig, pixCoordify
 
@@ -70,7 +71,6 @@ for i in range(0,1000):
     #Removes non registered pixels from the triangulated points, 
     # NB! clean_points are the points we want to use to building a pointcloud
     clean_points = in1d_dot_approach(points,dead_points)
-    os.chdir("C:/Users/"+ str(uname) + "/OneDrive/tpk4940Master")
     """
     X = np.load("X.npy")
     base_tool = np.load("T.npy") # this should update evry time the robot moves
@@ -81,7 +81,9 @@ for i in range(0,1000):
     clean_points = np.asarray(points_EE)
     """
     clean_points = clean_points[600:1400]
-    np.save("snap1.npy",clean_points)
+    os.chdir("C:/Users/"+ str(uname) + "/OneDrive/tpk4940Master/snaps")
+    
+    np.save("snap12.npy",clean_points)
     plt.clf()
     plt.ion()
     fig = plt.figure(1)

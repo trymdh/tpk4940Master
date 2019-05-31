@@ -8,7 +8,7 @@ from PlaneFunctions import plotPlane
 
 uname = getUname()
 wd = getCurrentWD()
-laser3D = np.load("POOOOOOINTS.npy")[0:700]
+laser3D = np.load("snap1.npy")[0:700]
 base_tool = np.load("T.npy")
 base_tool[0:3,3] = base_tool[0:3,3]*1000
 X = np.load("X.npy")

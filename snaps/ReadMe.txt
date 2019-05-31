@@ -1,0 +1,1 @@
+Snaps taken at intervals of 10 mm
