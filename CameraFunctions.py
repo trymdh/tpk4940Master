@@ -1,10 +1,10 @@
+import numpy as np 
 import cx.cx_cam as cam
 import cx.cx_base as base
 
 #NB!
 #This script have dependencies tied to 
 #the Automation Technology SDK and standalone Python.
-
 
 def getDevice():
     """
@@ -152,7 +152,7 @@ def cogConfig(hDev):
     cam.cx_setParam(hDev,"AoiSelector", 1)
     cam.cx_setParam(hDev,"AoiHeight", 1088)
     cam.cx_setParam(hDev,"AoiOffsetY", 0)
-    cam.cx_setParam(hDev,"AoiThreshold", 140)#default 240
+    cam.cx_setParam(hDev,"AoiThreshold", 120)#default 240
     cam.cx_setParam(hDev,"NumAOIs", 1)
     cam.cx_setParam(hDev,"SequencerMode", 0)
     cam.cx_setParam(hDev,"ProfileTriggerMode", 0)

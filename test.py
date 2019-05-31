@@ -12,7 +12,7 @@ from UtilityFunctions import getUname
 np.set_printoptions(suppress=True)
 
 points = np.load("POOOOOOINTS.npy")
-points = points[800:1500]
+points = points[700:1200]
 
 base_tool = np.load("T.npy")
 base_tool[0:3,3] = base_tool[0:3,3]*1000
@@ -30,7 +30,7 @@ for j in range(0,100):
     for point in points:
         points_Y.append(np.dot(Y,np.append(point,1)))
 points_Y = np.asarray(points_Y)
-points_Y = points_Y
+points_Y = points_Y[::5]
 
 #clean_points = points
 X = points_Y[:,0]
