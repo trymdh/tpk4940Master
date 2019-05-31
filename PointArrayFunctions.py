@@ -43,3 +43,16 @@ def LaserPointCloud(uname,laserImgs):
                     ext_points.append(coord3D)
         j += 1
     return np.asarray(ext_points).reshape(-1,3)
+
+def homogenify(G):
+    #takes an array with rows of 3D points and returns an array with rows of
+    #homogenous points.
+    H = []
+    for point in G:
+        H.append(np.append(point,1))
+    return np.asarray(H)
+
+def unhomogenify(G_h):
+    #takes an array on the form G_h = [(x,y,z,1),...,(x_n,y_n,z_n,1)]
+    #and returns G = [(x,y,z), .... (x_n,y_n,z_n)]
+   return np.column_stack((np.column_stack((G_h[:,0],G_h[:,1])),G_h[:,2]))

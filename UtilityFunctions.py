@@ -1,5 +1,6 @@
 import re
 import os
+import glob
 import numpy as np
 
 def getUname():
@@ -20,3 +21,6 @@ def sortList(unsortedList):
     alphanum_key = lambda key: [convert(c) for c in re.split('([0-9]+)',key)]
     return sorted(unsortedList,key = alphanum_key)
 
+def getNpyPaths():
+    #returns a list of all the .npy paths in the current directiory in alpha numerical order
+    return sortList(glob.glob(os.getcwd().replace("\\","/") + "/*.npy"))

@@ -1,7 +1,7 @@
 import os
 import msvcrt
 import numpy as np
-from MatrixFunctions import homogenify
+from PointArrayFunctions import homogenify
 from PlaneFunctions import getCentroid3D, planeify, svd_AxB
 from ErrorFunctions import getError, error_checker
 

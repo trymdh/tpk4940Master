@@ -16,14 +16,6 @@ def cvec(x,y,z):
 def skew(k):
     return np.array([[0,-k[2],k[1]],[k[2],0,-k[0]],[-k[1],k[0],0]])
 
-def homogenify(G):
-    #takes an matrix with rows of points and returns a matrix with rows of
-    #homogenous points.
-    H = []
-    for point in G:
-        H.append(np.append(point,1))
-    return np.asarray(H)
-
 #Returns the rotation about the x-axis
 def rotx(angle):
 	R = np.array([[1, 0, 0],[0, c(angle), -s(angle)],[0, s(angle), c(angle)]])
