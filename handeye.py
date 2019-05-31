@@ -3,7 +3,7 @@ import re
 import random
 import numpy as np
 import glob
-from QuaternionFunctions import*
+from QuaternionFunctions import shepperd, qprod
 from matplotlib import pyplot as plt
 from matplotlib.ticker import MaxNLocator,ScalarFormatter 
 from UtilityFunctions import getUname, sortList
@@ -136,16 +136,17 @@ t_error = np.asarray(t_error)
 t = cnt_list
 ax = plt.figure(1)
 plt.subplot(211)
-plt.title("Mean quaternion error in rotation, |1-|q_e||")
-plt.plot(t,R_error)
+plt.title("Mean quaternion error in rotation")
+plt.plot(t,R_error, label = "|1-|q_e||")
 ax.gca().xaxis.set_major_locator(MaxNLocator(integer=True))
+plt.legend()
 plt.subplot(212)
 plt.title("Mean Error in translation")
 plt.plot(t,t_error[:,0], label = "e_x")
 plt.plot(t,t_error[:,1], label = "e_y")
 plt.plot(t,t_error[:,2], label = "e_z")
-plt.legend()
 plt.ylabel("mm")
 plt.xlabel("# permutations")
 ax.gca().xaxis.set_major_locator(MaxNLocator(integer=True))
+plt.legend()
 plt.show()

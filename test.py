@@ -1,35 +1,27 @@
 import os
 import re
+import cv2
+import glob
 import random
 import numpy as np
-import glob
+from stl import Mesh
 from matplotlib import pyplot as plt
 from mpl_toolkits import mplot3d
 from mpl_toolkits.mplot3d import Axes3D
-import cv2
-from stl import Mesh
-
+from UtilityFunctions import getUname
 np.set_printoptions(suppress=True)
-pi = np.pi
-c = np.cos
-s = np.sin
-transpose = np.transpose
-sqrt = np.sqrt
 
-def getUname():
-    uname = os.getlogin()
-    if uname == "trymdh":
-        uname = uname + ".WIN-NTNU-NO"
-    return uname
 points = np.load("POOOOOOINTS.npy")
 points = points[800:1500]
 
 base_tool = np.load("T.npy")
 base_tool[0:3,3] = base_tool[0:3,3]*1000
-print(base_tool)
 X = np.load("X.npy")
+
+#base to camera transformation
 Y = base_tool@X
-print(Y)
+
+#change the frame of reference
 points_Y = []
 for j in range(0,100):
     #simulating movement along X axes
@@ -55,7 +47,6 @@ your_mesh.translate([280,-1122,299])
 
 fig = plt.figure(1)
 # Auto scale to the mesh size
-
 
 ax = plt.axes(projection='3d')
 ax.add_collection3d(mplot3d.art3d.Poly3DCollection(your_mesh.vectors))
