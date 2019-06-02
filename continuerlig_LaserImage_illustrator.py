@@ -80,7 +80,7 @@ for i in range(0,1000):
         points_EE.append(np.dot(Y,np.append(point,1).reshape(4,1)))
     clean_points = np.asarray(points_EE)
     """
-    clean_points = clean_points[600:1400]
+    clean_points = clean_points[600:1400] # don care about the edges of the image...800 points
     os.chdir("C:/Users/"+ str(uname) + "/OneDrive/tpk4940Master/snaps")
     
     np.save("snap12.npy",clean_points)
