@@ -100,6 +100,5 @@ while loop_exit:
     ax.set_zlim3d(np.mean(Z)-50,np.mean(Z)+50)
     ax.set_ylim3d(np.mean(Y)-50,np.mean(Y)+50)
     ax.set_xlim3d(np.mean(X)-50,np.mean(X)+50)
-
-    ax.scatter3D(X,Y,Z)
+    ax.scatter3D(X,Y,Z,s=0.1)
     plt.pause(1/60)
