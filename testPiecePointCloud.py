@@ -10,9 +10,9 @@ uname = getUname()
 wd = os.getcwd()
 
 
-os.chdir(wd + "\snaps")
+os.chdir(wd + "\snaps1\Snaps")
 scan_fname = getNpyPaths()
-os.chdir(os.getcwd() + "\SnapPoses")
+os.chdir(wd + "\snaps1\SnapPoses")
 scan_pose_fname = getNpyPaths()
 os.chdir(wd)
 X = np.load("X.npy")
@@ -35,9 +35,9 @@ for scan in scans:
     for point in scan:
         pointcloud.append(np.dot(Y,np.append(point,1)))
     i += 1 
-
 points = unhomogenify(np.asarray(pointcloud))
 
+"""
 #rough filtering
 Z_mean = np.mean(points[:,2])
 Points = []
@@ -51,6 +51,7 @@ for point in points:
     else:
         Points.append(point)
 points = np.asarray(Points)
+
 
 #compute surface normals
 surface_normals = []
@@ -94,21 +95,21 @@ new_index = []
 for h in range(1,len(change_index)):
     if np.abs(change_index[h] - change_index[h-1]) > 10:
         new_index.append(change_index[h])
-
+"""
 #change_points = np.asarray(change_points)
-change_points = mean_points[new_index]
-print(change_points.shape[0])
-fit1,c,err,outliers1 = ransacPlane(mean_points)
-fit2,c,err,outliers2 = ransacPlane(outliers1)
+#change_points = mean_points[new_index]
+#print(change_points.shape[0])
+#fit1,c,err,outliers1 = ransacPlane(mean_points)
+#fit2,c,err,outliers2 = ransacPlane(outliers1)
 #fit3,c,err,outliers3 = ransacPlane(outliers2)
 #fit4,c,err,outliers4 = ransacPlane(outliers3)
-print(np.around(fit1,decimals = 4))
-print(np.around(fit2,decimals = 4))
-print(np.abs(fit1[3]-fit2[3]))
+#print(np.around(fit1,decimals = 4))
+#print(np.around(fit2,decimals = 4))
+#print(np.abs(fit1[3]-fit2[3]))
 #print(np.around(fit3,decimals = 2))
 #print(np.around(fit4,decimals = 2))
 
-points = change_points
+#points = change_points
 x = points[:,0]
 y = points[:,1]
 z = points[:,2]
@@ -117,11 +118,11 @@ ax = plt.subplot(111, projection ='3d')
 ax.set_xlabel('x')
 ax.set_ylabel('y')
 ax.set_zlabel('z')
-ax.set_zlim(250,350)
-ax.quiver(mean_points[:,0],mean_points[:,1],mean_points[:,2],mean_normals[:,0],mean_normals[:,1],mean_normals[:,2],length = 5, normalize = True)
+#ax.set_zlim(250,350)
+#ax.quiver(mean_points[:,0],mean_points[:,1],mean_points[:,2],mean_normals[:,0],mean_normals[:,1],mean_normals[:,2],length = 5, normalize = True)
 ax.scatter(x, y, z, color ='r')
-plotPlane(fit1,ax,"g",0.3)
-plotPlane(fit2,ax,"y",0.7)
+#plotPlane(fit1,ax,"g",0.3)
+#plotPlane(fit2,ax,"y",0.7)
 #plotPlane(fit3,ax,"b",1)
 #plotPlane(fit4,ax,"y",1)
 plt.show()

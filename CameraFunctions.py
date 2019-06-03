@@ -145,14 +145,14 @@ def cogConfig(hDev):
     cam.cx_setParam(hDev,"Vramp1", 109)
     cam.cx_setParam(hDev,"Vramp2", 109)
     cam.cx_setParam(hDev,"FOT", 10)
-    cam.cx_setParam(hDev,"ExposureTimeAbs", 1000) #default 100
+    cam.cx_setParam(hDev,"ExposureTimeAbs", 500) #default 100
     cam.cx_setParam(hDev,"FramePeriode", 100)
     cam.cx_setParam(hDev,"MultipleSlopeMode", 3)
     cam.cx_setParam(hDev,"NDRMode", 0)
     cam.cx_setParam(hDev,"AoiSelector", 1)
     cam.cx_setParam(hDev,"AoiHeight", 1088)
     cam.cx_setParam(hDev,"AoiOffsetY", 0)
-    cam.cx_setParam(hDev,"AoiThreshold", 120)#default 240
+    cam.cx_setParam(hDev,"AoiThreshold", 100)#default 240
     cam.cx_setParam(hDev,"NumAOIs", 1)
     cam.cx_setParam(hDev,"SequencerMode", 0)
     cam.cx_setParam(hDev,"ProfileTriggerMode", 0)

@@ -54,20 +54,14 @@ for i in range(0,2048):
     dead_array[i,0] = i
 
 dead_points = triang(dead_array)
-
-for i in range(0,1000):
-    if msvcrt.kbhit():
-        key = str(msvcrt.getch()).replace("b'","").replace("'","")
-        if key == 'q':
-            print("Loop exited")
-            break
-
+indx = 0
+loop_exit = True
+while loop_exit:
     #Snap an image of the scene in COG mode.
     laserlinepixels = snap(hDev)
     #reshape the COG-image from (2048,) to (2048,2)
     laserpixel = pixCoordify(laserlinepixels.ravel() / 64 , 2048)
     points = triang(laserpixel)
-
     #Removes non registered pixels from the triangulated points, 
     # NB! clean_points are the points we want to use to building a pointcloud
     clean_points = in1d_dot_approach(points,dead_points)
@@ -81,9 +75,17 @@ for i in range(0,1000):
     clean_points = np.asarray(points_EE)
     """
     clean_points = clean_points[600:1400] # don care about the edges of the image...800 points
-    os.chdir("C:/Users/"+ str(uname) + "/OneDrive/tpk4940Master/snaps")
-    
-    np.save("snap12.npy",clean_points)
+
+    if msvcrt.kbhit():
+        key = str(msvcrt.getch()).replace("b'","").replace("'","")
+        if key == 'e':
+            loop_exit = False
+            print("Loop exited")
+        elif key == "s":
+            os.chdir("C:/Users/"+ str(uname) + "/OneDrive/tpk4940Master/snaps1")
+            laserPixelList = sortList(glob.glob(os.getcwd().replace("\\","/") + "/*.npy"))
+            indx = len(laserPixelList) + 1
+            np.save("snap" + str(indx) + ".npy",clean_points)
     plt.clf()
     plt.ion()
     fig = plt.figure(1)
