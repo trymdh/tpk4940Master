@@ -5,29 +5,30 @@ from PointArrayFunctions import homogenify
 from PlaneFunctions import getCentroid3D, planeify, svd_AxB
 from ErrorFunctions import getError, error_checker
 
-def countInliers(error_vec, median_error,error_std,pointCloud):
+def countInliers(error_vec, median_error,error_std,pointCloud,delta):
     i = 0
     cnt_in = 0
+    cnt_out = 0
     Inliers = []
     Outliers = []
     for error in error_vec:
-        if np.abs(error) < np.abs(median_error) + 0.5*np.abs(error_std):
-        #if np.abs(error) < 0.2:
+        if np.abs(error) < np.abs(median_error) - delta*np.abs(error_std):
             cnt_in += 1
             Inliers.append(pointCloud[i])
         else:
+            cnt_out += 1
             Outliers.append(pointCloud[i])
         i += 1
     Inliers = np.asarray(Inliers)
     Outliers = np.asarray(Outliers)
-    return Inliers,Outliers
+    return Inliers,Outliers,cnt_in,cnt_out
 
-def ransacPlane(pointCloud):
+def ransacPlane(pointCloud,delta,goal):
     bestFit = None
     bestErr = np.inf
     centroid = None
     best_cnt_in = 0
-    goal_inlier = 0.7*len(pointCloud)
+    goal_inlier = goal*len(pointCloud)
     N = np.inf
     ite = 0
     while ite < N:
@@ -39,16 +40,14 @@ def ransacPlane(pointCloud):
         #calculate error and inlier threshold
         error_vec,median_error,error_std = getError(pointCloud,pI,c)
         #count inliers
-        Inliers, outliers = countInliers(error_vec, median_error,error_std,pointCloud)
-        cnt_in = len(Inliers)
+        Inliers,Outliers, cnt_in,cnt_out = countInliers(error_vec, median_error,error_std,pointCloud,delta)
         if cnt_in >= goal_inlier:
             betterData = Inliers
-            BetterOutliers = outliers
-            #The new dataset contains few outliers => use LS to estimate plane
-            #betterFit,betterRes = lsPlane(betterData)
+            betterOut = Outliers
             betterFit,c = svd_AxB(homogenify(betterData))
             error = error_checker(betterFit,pointCloud)
-            if (cnt_in >= best_cnt_in) and (error < bestErr):
+            if (cnt_in > best_cnt_in) and error < bestErr:
+                print(cnt_in,cnt_out)
                 #update N
                 w = cnt_in/len(pointCloud)
                 N = np.log(1-0.99)/np.log(1-w**3)
@@ -57,15 +56,9 @@ def ransacPlane(pointCloud):
                 best_cnt_in = cnt_in
                 bestErr = error
                 centroid = c
-                #print("\nIteration {0}".format(ite + 1))
-                #print("Inlier count: {0} / {1}".format(best_cnt_in,len(pointCloud)))
-                #print ("{0}x + {1}y + {2}z + {3}".format(bestFit[0], bestFit[1], bestFit[2],bestFit[3]))
-                #print ("Error:")
-                #print(bestErr)
-        
         ite += 1
     #print("Number of iterations:{0}".format(ite + 1))
-    return bestFit,centroid,bestErr,BetterOutliers
+    return bestFit,centroid,bestErr,betterData,betterOut
 
 def ransacXn(uname,pointCloud,n):
     bestfit_folder = "C:/Users/" + str(uname) + "/OneDrive/tpk4940Master"
@@ -80,7 +73,7 @@ def ransacXn(uname,pointCloud,n):
             if key == 'q':
                 print("Loop exited")
                 break
-        ransac_fit,c,err,outliers = ransacPlane(pointCloud)
+        ransac_fit,c,err,outliers = ransacPlane(pointCloud,1.5,0.1)
         print("Current error is:{0} \t Best error is: {1}".format(err,bestErr))
         if err < bestErr:
             bestFit = np.append(ransac_fit[0:3],c)
