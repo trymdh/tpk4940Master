@@ -73,7 +73,7 @@ def ransacXn(uname,pointCloud,n):
             if key == 'q':
                 print("Loop exited")
                 break
-        ransac_fit,c,err,outliers = ransacPlane(pointCloud,1.5,0.1)
+        ransac_fit,c,err,inliers,outliers = ransacPlane(pointCloud,0.5,0.1)
         print("Current error is:{0} \t Best error is: {1}".format(err,bestErr))
         if err < bestErr:
             bestFit = np.append(ransac_fit[0:3],c)

@@ -1,6 +1,0 @@
-{
-    "python.pythonPath": "C:\\Users\\TrymAsus\\Desktop\\AT-Python-Standalone\\AT-Python-Standalone\\AT-WinPython\\AT-WinPython-64bit-3.5.4.2\\python-3.5.4.amd64\\python.exe",
-    "python.formatting.provider": "yapf",
-    "python.linting.pylintEnabled": true,
-    "python.linting.enabled": false
-}

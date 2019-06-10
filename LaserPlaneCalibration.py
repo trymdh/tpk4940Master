@@ -3,9 +3,8 @@ import glob
 import numpy as np
 from matplotlib import pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
-from MatrixFunctions import homogenify
 from loadCalibration import loadCaliParam
-from PointArrayFunctions import LaserPointCloud
+from PointArrayFunctions import LaserPointCloud, homogenify
 from UtilityFunctions import getUname, sortList
 from ErrorFunctions import getError, error_checker
 from RansacFunctions import ransacPlane, ransacXn, countInliers, getCentroid3D

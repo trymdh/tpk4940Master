@@ -3,7 +3,7 @@ import re
 import random
 import numpy as np
 import glob
-from QuaternionFunctions import shepperd, qprod
+from QuaternionFunctions import shepperd, qprod, qconj
 from matplotlib import pyplot as plt
 from matplotlib.ticker import MaxNLocator,ScalarFormatter 
 from UtilityFunctions import getUname, sortList
@@ -104,7 +104,7 @@ for i in range(3,n):
     X = np.eye(4)
     X[0:3,0:3],X[0:3,3] = np.around(Rx,decimals = 6), np.around(tx,decimals=3)
     print(X)
-    np.save("X.npy",X)
+    #np.save("X.npy",X)
     q_metric = []
     t_ex = []
     t_ey = []
